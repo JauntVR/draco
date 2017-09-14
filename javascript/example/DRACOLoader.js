@@ -28,7 +28,11 @@ THREE.DRACOLoader = function(dracoPath, dracoDecoderType, manager) {
         (dracoDecoderType !== undefined) ? dracoDecoderType : {};
     this.drawMode = THREE.TrianglesDrawMode;
     this.dracoSrcPath = (dracoPath !== undefined) ? dracoPath : './';
-    THREE.DRACOLoader.loadDracoDecoder(this);
+    // If draco_decoder.js or wasm code is already loaded/included, then do
+    // not dynamically load the decoder.
+    if (typeof DracoDecoderModule === 'undefined') {
+      THREE.DRACOLoader.loadDracoDecoder(this);
+    }
 };
 
 THREE.DRACOLoader.prototype = {
