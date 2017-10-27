@@ -812,6 +812,50 @@ else ()
               $<TARGET_OBJECTS:draco_metadata_enc>
               $<TARGET_OBJECTS:draco_point_cloud>
               $<TARGET_OBJECTS:draco_points_enc>)
+
+  set(psy_draco_compression_sources
+      ${draco_attributes_sources}
+      ${draco_compression_attributes_dec_sources}
+      ${draco_compression_attributes_enc_sources}
+      ${draco_compression_attributes_pred_schemes_dec_sources}
+      ${draco_compression_attributes_pred_schemes_enc_sources}
+      ${draco_compression_decode_sources}
+      ${draco_compression_encode_sources}
+      ${draco_compression_mesh_dec_sources}
+      ${draco_compression_mesh_enc_sources}
+      ${draco_compression_point_cloud_dec_sources}
+      ${draco_compression_point_cloud_enc_sources}
+      ${draco_core_sources}
+      ${draco_core_bit_coders_sources}
+      ${draco_dec_config_sources}
+      ${draco_enc_config_sources}
+      ${draco_io_sources}
+      ${draco_mesh_sources}
+      ${draco_metadata_dec_sources}
+      ${draco_metadata_enc_sources}
+      ${draco_metadata_sources}
+      ${draco_point_cloud_sources}
+      ${draco_points_dec_sources}
+      ${draco_points_enc_sources}
+      ${draco_version_sources}
+      "${draco_src_root}/psy/psy_draco.h"
+      "${draco_src_root}/psy/psy_draco_decoder.cpp"
+      "${draco_src_root}/psy/psy_draco_decoder.h"
+      "${draco_src_root}/psy/psy_draco_encoder.cpp"
+      "${draco_src_root}/psy/psy_draco_encoder.h")
+  if (MSVC)
+      # because draco 3d has not yet supported for visual studio 2013
+      # we need to create a simple wrapper and compile it on visual studio 2015
+      # - if we compile it onto a static lib, we will get linking error due to mismatch between two visual studio versions
+      # - so, we're compiling the project as shared lib here
+      add_definitions(-DPSY_DRACO_EXPORT=1)
+      add_library(psy_draco_compression SHARED ${psy_draco_compression_sources})
+      set_target_properties(psy_draco_compression PROPERTIES SOVERSION 1)
+  else()
+      # for consitency supporting on windows, we're also creating a wrapper for other platform
+      add_library(psy_draco_compression ${psy_draco_compression_sources})
+  endif()
+
   add_library(draco
               ${draco_version_sources}
               $<TARGET_OBJECTS:draco_attributes>
