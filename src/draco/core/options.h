@@ -18,6 +18,21 @@
 #include <cstdlib>
 #include <map>
 #include <string>
+#include <sstream>
+
+#if ANDROID
+namespace std {
+
+template <typename T>
+std::string to_string(T value)
+{
+    std::ostringstream os;
+    os << value;
+    return os.str();
+}
+
+}
+#endif
 
 namespace draco {
 
@@ -105,7 +120,7 @@ bool Options::GetVector(const std::string &name, int num_dims,
       act_str = next_str;
       out_val[i] = static_cast<DataTypeT>(val);
     } else {
-      const float val = std::strtof(act_str, &next_str);
+      const float val = strtof(act_str, &next_str);
       if (act_str == next_str)
         return true;  // End reached.
       act_str = next_str;
