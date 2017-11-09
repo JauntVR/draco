@@ -44,8 +44,10 @@ StatusOr<std::unique_ptr<PointCloudDecoder>> CreatePointCloudDecoder(
 #ifdef DRACO_MESH_COMPRESSION_SUPPORTED
 StatusOr<std::unique_ptr<MeshDecoder>> CreateMeshDecoder(uint8_t method) {
   if (method == MESH_SEQUENTIAL_ENCODING) {
+      std::cout << "sequential\n";
     return std::unique_ptr<MeshDecoder>(new MeshSequentialDecoder());
   } else if (method == MESH_EDGEBREAKER_ENCODING) {
+      std::cout << "edgebreaker\n";
     return std::unique_ptr<MeshDecoder>(new MeshEdgeBreakerDecoder());
   }
   return Status(Status::ERROR, "Unsupported encoding method.");
@@ -115,6 +117,7 @@ Status Decoder::DecodeBufferToGeometry(DecoderBuffer *in_buffer,
   if (header.encoder_type != TRIANGULAR_MESH) {
     return Status(Status::ERROR, "Input is not a mesh.");
   }
+  std::cout << "Decoding mesh type: ";
   DRACO_ASSIGN_OR_RETURN(std::unique_ptr<MeshDecoder> decoder,
                          CreateMeshDecoder(header.encoder_method))
 

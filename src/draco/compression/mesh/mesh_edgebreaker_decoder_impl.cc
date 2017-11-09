@@ -216,6 +216,7 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::CreateAttributesDecoder(
 
 template <class TraversalDecoder>
 bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
+    std::cout << "MeshEdgeBreakerDecoderImpl::DecodeConnectivity() starting\n";
   num_new_vertices_ = 0;
   new_to_parent_vertex_map_.clear();
   if (decoder_->bitstream_version() < DRACO_BITSTREAM_VERSION(2, 2)) {
@@ -228,6 +229,7 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
         return false;
     }
     num_new_vertices_ = num_new_verts;
+    std::cout << "MeshEdgeBreakerDecoderImpl::num_new_vertices = " << std::to_string(num_new_vertices_) << "\n";
   }
 
   uint32_t num_encoded_vertices;
@@ -240,6 +242,8 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
   }
   num_encoded_vertices_ = num_encoded_vertices;
 
+  std::cout << "MeshEdgeBreakerDecoderImpl::num_encoded_vertices = " << std::to_string(num_encoded_vertices_) << "\n";
+
   uint32_t num_faces;
   if (decoder_->bitstream_version() < DRACO_BITSTREAM_VERSION(2, 0)) {
     if (!decoder_->buffer()->Decode(&num_faces))
@@ -248,6 +252,8 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
     if (!DecodeVarint(&num_faces, decoder_->buffer()))
       return false;
   }
+
+  std::cout << "MeshEdgeBreakerDecoderImpl::num_faces = " << std::to_string(num_faces) << "\n";
 
   // Decode topology (connectivity).
   vertex_traversal_length_.clear();
@@ -274,6 +280,8 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
   if (!decoder_->buffer()->Decode(&num_attribute_data))
     return false;
 
+  std::cout << "MeshEdgeBreakerDecoderImpl::num_attribute_data = " << std::to_string(num_attribute_data) << "\n";
+
   attribute_data_.clear();
   // Add one attribute data for each attribute decoder.
   attribute_data_.resize(num_attribute_data);
@@ -286,6 +294,8 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
     if (!DecodeVarint(&num_encoded_symbols, decoder_->buffer()))
       return false;
   }
+
+  std::cout << "MeshEdgeBreakerDecoderImpl::num_encoded_symbols = " << std::to_string(num_encoded_symbols) << "\n";
 
   if (num_faces < num_encoded_symbols) {
     // Number of faces needs to be the same or greater than the number of
@@ -302,6 +312,8 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
     if (!DecodeVarint(&num_encoded_split_symbols, decoder_->buffer()))
       return false;
   }
+
+  std::cout << "MeshEdgeBreakerDecoderImpl::num_encoded_split_symbols = " << std::to_string(num_encoded_split_symbols) << "\n";
 
   // Start with all vertices marked as holes (boundaries).
   // Only vertices decoded with TOPOLOGY_C symbol (and the initial face) will
@@ -320,6 +332,7 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
       if (!DecodeVarint(&encoded_connectivity_size, decoder_->buffer()))
         return false;
     }
+    std::cout << "MeshEdgeBreakerDecoderImpl::encoded_connectivity_size = " << std::to_string(encoded_connectivity_size) << "\n";
     DecoderBuffer event_buffer;
     event_buffer.Init(
         decoder_->buffer()->data_head() + encoded_connectivity_size,
@@ -352,6 +365,8 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
   const int num_connectivity_verts = DecodeConnectivity(num_encoded_symbols);
   if (num_connectivity_verts == -1)
     return false;
+
+  std::cout << "MeshEdgeBreakerDecoderImpl::num_connectivity_verts = " << std::to_string(num_connectivity_verts) << "\n";
 
   // Set the main buffer to the end of the traversal.
   decoder_->buffer()->Init(traversal_end_buffer.data_head(),
@@ -416,6 +431,9 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
   }
   if (!AssignPointsToCorners())
     return false;
+
+  std::cout << "MeshEdgeBreakerDecoderImpl::DecodeConnectivity() ending\n";
+
   return true;
 }
 
