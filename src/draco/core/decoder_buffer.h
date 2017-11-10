@@ -67,6 +67,7 @@ class DecoderBuffer {
     if (!Peek(out_val))
       return false;
     pos_ += sizeof(T);
+    std::cout << "Decoded " << std::to_string(sizeof(T)) << " bytes. Position " << std::to_string(pos_) << "\n";
     return true;
   }
 
@@ -75,6 +76,7 @@ class DecoderBuffer {
       return false;  // Buffer overflow.
     memcpy(out_data, (data_ + pos_), size_to_decode);
     pos_ += size_to_decode;
+    std::cout << "Decoded " << std::to_string(size_to_decode) << " bytes. Position " << std::to_string(pos_) << "\n";
     return true;
   }
 
@@ -96,11 +98,15 @@ class DecoderBuffer {
   }
 
   // Discards #bytes from the input buffer.
-  void Advance(int64_t bytes) { pos_ += bytes; }
+  void Advance(int64_t bytes) { 
+      std::cout << "Advancing " << std::to_string(bytes) << " bytes. position " << std::to_string(pos_);
+      pos_ += bytes; }
 
   // Moves the parsing position to a specific offset from the beginning of the
   // input data.
-  void StartDecodingFrom(int64_t offset) { pos_ = offset; }
+  void StartDecodingFrom(int64_t offset) { 
+      std::cout << "Moving position in buffer to " << std::to_string(offset) << "\n";
+      pos_ = offset; }
 
   void set_bitstream_version(uint16_t version) { bitstream_version_ = version; }
 
