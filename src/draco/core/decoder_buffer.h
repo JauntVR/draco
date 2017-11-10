@@ -64,23 +64,23 @@ class DecoderBuffer {
   // Returns false on error.
   template <typename T>
   bool Decode(T *out_val) {
-      std::cout << "DecoderBuffer::Decode() - Starting\n";
+      //std::cout << "DecoderBuffer::Decode() - Starting\n";
     if (!Peek(out_val))
       return false;
     pos_ += sizeof(T);
-    std::cout << "DecoderBuffer: decoding " << std::to_string(sizeof(T)) << " bytes. Position " << std::to_string(pos_) << "\n";
-    std::cout << "DecoderBuffer::Decode() - Ending\n";
+    //std::cout << "DecoderBuffer: decoding " << std::to_string(sizeof(T)) << " bytes. Position " << std::to_string(pos_) << "\n";
+    //std::cout << "DecoderBuffer::Decode() - Ending\n";
     return true;
   }
 
   bool Decode(void *out_data, size_t size_to_decode) {
-      std::cout << "DecoderBuffer::Decode() - Starting\n";
+      //std::cout << "DecoderBuffer::Decode() - Starting\n";
     if (data_size_ < static_cast<int64_t>(pos_ + size_to_decode))
       return false;  // Buffer overflow.
     memcpy(out_data, (data_ + pos_), size_to_decode);
     pos_ += size_to_decode;
-    std::cout << "DecoderBuffer: decoding " << std::to_string(size_to_decode) << " bytes. Position " << std::to_string(pos_) << "\n";
-    std::cout << "DecoderBuffer::Decode() - Ending\n";
+    //std::cout << "DecoderBuffer: decoding " << std::to_string(size_to_decode) << " bytes. Position " << std::to_string(pos_) << "\n";
+    //std::cout << "DecoderBuffer::Decode() - Ending\n";
     return true;
   }
 
@@ -103,18 +103,18 @@ class DecoderBuffer {
 
   // Discards #bytes from the input buffer.
   void Advance(int64_t bytes) {
-      std::cout << "DecoderBuffer::Advance() - Starting\n";
-      std::cout << "DecoderBuffer: Advancing " << std::to_string(bytes) << " bytes. position " << std::to_string(pos_) << "\n";
+      //std::cout << "DecoderBuffer::Advance() - Starting\n";
+      //std::cout << "DecoderBuffer: Advancing " << std::to_string(bytes) << " bytes. position " << std::to_string(pos_) << "\n";
       pos_ += bytes; 
-      std::cout << "DecoderBuffer::Advance() - Ending\n";
+      //std::cout << "DecoderBuffer::Advance() - Ending\n";
   }
 
   // Moves the parsing position to a specific offset from the beginning of the
   // input data.
   void StartDecodingFrom(int64_t offset) { 
-      std::cout << "DecoderBuffer::StartDecodingFrom() - Starting\n";
-      std::cout << "DecoderBuffer: Moving position in buffer to " << std::to_string(offset) << "\n";
-      std::cout << "DecoderBuffer::StartDecodingFrom() - Ending\n";
+      //std::cout << "DecoderBuffer::StartDecodingFrom() - Starting\n";
+      //std::cout << "DecoderBuffer: Moving position in buffer to " << std::to_string(offset) << "\n";
+      //std::cout << "DecoderBuffer::StartDecodingFrom() - Ending\n";
       pos_ = offset; }
 
   void set_bitstream_version(uint16_t version) { bitstream_version_ = version; }
@@ -137,12 +137,12 @@ class DecoderBuffer {
 
     // Sets the bit buffer to |b|. |s| is the size of |b| in bytes.
     inline void reset(const void *b, size_t s) {
-        std::cout << "BitDecoder::Reset() - Starting\n";
+        //std::cout << "BitDecoder::Reset() - Starting\n";
       bit_offset_ = 0;
       bit_buffer_ = static_cast<const uint8_t *>(b);
       bit_buffer_end_ = bit_buffer_ + s;
-      std::cout << "BitDecoder: size of bit buffer - " << std::to_string(s) << "\n";
-      std::cout << "BitDecoder::Reset() - Ending\n";
+      //std::cout << "BitDecoder: size of bit buffer - " << std::to_string(s) << "\n";
+      //std::cout << "BitDecoder::Reset() - Ending\n";
     }
 
     // Returns number of bits decoded so far.

@@ -333,7 +333,7 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
         return false;
     }
     std::cout << "MeshEdgeBreakerDecoderImpl::encoded_connectivity_size = " << std::to_string(encoded_connectivity_size) << "\n";
-    std::cout << "MeshEdgeBreakerDecoderImpl::Decode hole and topology split events using new buffer";
+    std::cout << "MeshEdgeBreakerDecoderImpl::Decode hole and topology split events using new buffer\n";
     DecoderBuffer event_buffer;
     event_buffer.Init(
         decoder_->buffer()->data_head() + encoded_connectivity_size,
@@ -359,6 +359,7 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
   }
   traversal_decoder_.SetNumAttributeData(num_attribute_data);
 
+  std::cout << "MeshEdgeBreakerDecoderImpl::Start traversal decoder";
   DecoderBuffer traversal_end_buffer;
   if (!traversal_decoder_.Start(&traversal_end_buffer))
     return false;
@@ -379,6 +380,8 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
     // Skip topology split data that was already decoded earlier.
     decoder_->buffer()->Advance(topology_split_decoded_bytes);
   }
+
+  std::cout << "MeshEdgeBreakerDecoderImpl:: Decode connectivity of non position attributes";
 
   // Decode connectivity of non-position attributes.
   if (attribute_data_.size() > 0) {
@@ -433,6 +436,8 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
   }
   if (!AssignPointsToCorners())
     return false;
+
+  std::cout << "MeshEdgeBreakerDecoderImpl:: Data left to decode : " << std::to_string(decoder_->buffer()->remaining_size());
 
   std::cout << "MeshEdgeBreakerDecoderImpl::DecodeConnectivity() ending\n";
 
