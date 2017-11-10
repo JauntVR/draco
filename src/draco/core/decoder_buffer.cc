@@ -35,9 +35,13 @@ void DecoderBuffer::Init(const char *data, size_t data_size, uint16_t version) {
   data_size_ = data_size;
   bitstream_version_ = version;
   pos_ = 0;
+  std::cout << "DecodeBuffer::Init() - Starting";
+  std::cout << "DecodeBuffer: data_size_ - " << std::to_string(data_size_) << "\n";
+  std::cout << "DecodeBuffer::Init() - Ending";
 }
 
 bool DecoderBuffer::StartBitDecoding(bool decode_size, uint64_t *out_size) {
+    std::cout << "DecoderBuffer::StartBitDecoding() - Starting";
   if (decode_size) {
     if (bitstream_version_ < DRACO_BITSTREAM_VERSION(2, 2)) {
       if (!Decode(out_size))
@@ -49,6 +53,7 @@ bool DecoderBuffer::StartBitDecoding(bool decode_size, uint64_t *out_size) {
   }
   bit_mode_ = true;
   bit_decoder_.reset(data_head(), remaining_size());
+  std::cout << "DecoderBuffer::StartBitDecoding() - Ending";
   return true;
 }
 
