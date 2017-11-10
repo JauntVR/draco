@@ -36,7 +36,7 @@ public:
     MeshDecompression::eStatus Run(const char* pCompressedData,
                                    const size_t compressedDataSizeInBytes)
     {
-        std::cout << "MeshDecompression::Run() - Starting";
+        std::cout << "MeshDecompression::Run() - Starting\n";
         mpBuffer->Init(pCompressedData, compressedDataSizeInBytes);
 
         const auto type_statusor = ::draco::Decoder::GetEncodedGeometryType(mpBuffer.get());
@@ -50,7 +50,7 @@ public:
         if (geom_type != ::draco::TRIANGULAR_MESH)
         {
             mStatus = ::draco::Status(::draco::Status::Code::ERROR,
-                                      "invalid encoded geometry type");
+                                      "invalid encoded geometry type\n");
             return eStatus::FAILED;
         }
 

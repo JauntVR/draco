@@ -333,6 +333,7 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
         return false;
     }
     std::cout << "MeshEdgeBreakerDecoderImpl::encoded_connectivity_size = " << std::to_string(encoded_connectivity_size) << "\n";
+    std::cout << "MeshEdgeBreakerDecoderImpl::Decode hole and topology split events using new buffer";
     DecoderBuffer event_buffer;
     event_buffer.Init(
         decoder_->buffer()->data_head() + encoded_connectivity_size,
@@ -362,6 +363,7 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
   if (!traversal_decoder_.Start(&traversal_end_buffer))
     return false;
 
+  std::cout << "MeshEdgeBreakerDecoderImpl::DecodeConnectivity of encoded symbols";
   const int num_connectivity_verts = DecodeConnectivity(num_encoded_symbols);
   if (num_connectivity_verts == -1)
     return false;
