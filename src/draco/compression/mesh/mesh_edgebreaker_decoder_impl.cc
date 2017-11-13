@@ -216,7 +216,6 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::CreateAttributesDecoder(
 
 template <class TraversalDecoder>
 bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
-
     mTotalSize = decoder_->buffer()->remaining_size();
 
   num_new_vertices_ = 0;

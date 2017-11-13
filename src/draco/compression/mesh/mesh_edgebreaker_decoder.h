@@ -39,11 +39,12 @@ class MeshEdgeBreakerDecoder : public MeshDecoder {
     return impl_->GetAttributeEncodingData(att_id);
   }
 
-  void GetConnectivityVsAttributeSize(std::vector<int> sizes)
+  const void *GetConnectivityVsAttributeSize(std::vector<int>& sizes) const override
   {
       int indices_size = impl_->GetSizeOfIndicies();
       int total_size = impl_->GetTotalSize();
       int connectivity_size = total_size - indices_size;
+      sizes.clear();
       sizes.push_back(connectivity_size);
       sizes.push_back(indices_size);
   }

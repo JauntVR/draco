@@ -32,19 +32,16 @@ bool MeshEdgeBreakerDecoder::InitializeDecoder() {
   impl_ = nullptr;
   if (traversal_decoder_type == 0) {
 #ifdef DRACO_STANDARD_EDGEBREAKER_SUPPORTED
-      std::cout << "standard edgebreaker\n";
     impl_ = std::unique_ptr<MeshEdgeBreakerDecoderImplInterface>(
         new MeshEdgeBreakerDecoderImpl<MeshEdgeBreakerTraversalDecoder>());
 #endif
   } else if (traversal_decoder_type == 1) {
 #ifdef DRACO_PREDICTIVE_EDGEBREAKER_SUPPORTED
-      std::cout << "predictive edgebreaker\n";
     impl_ = std::unique_ptr<MeshEdgeBreakerDecoderImplInterface>(
         new MeshEdgeBreakerDecoderImpl<
             MeshEdgeBreakerTraversalPredictiveDecoder>());
 #endif
   } else if (traversal_decoder_type == 2) {
-      std::cout << "valence edgebreaker\n";
     impl_ = std::unique_ptr<MeshEdgeBreakerDecoderImplInterface>(
         new MeshEdgeBreakerDecoderImpl<
             MeshEdgeBreakerTraversalValenceDecoder>());
@@ -58,7 +55,6 @@ bool MeshEdgeBreakerDecoder::InitializeDecoder() {
 }
 
 bool MeshEdgeBreakerDecoder::DecodeConnectivity() {
-    std::cout << "MeshEdgeBreakerDecoder::DecodingConnectivity: ";
   return impl_->DecodeConnectivity();
 }
 

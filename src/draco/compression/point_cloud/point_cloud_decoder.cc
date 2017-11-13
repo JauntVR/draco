@@ -86,10 +86,8 @@ Status PointCloudDecoder::Decode(const DecoderOptions &options,
       (header.flags & METADATA_FLAG_MASK)) {
     DRACO_RETURN_IF_ERROR(DecodeMetadata())
   }
-  std::cout << "PointCloudDecoder::Initializing decoder: ";
   if (!InitializeDecoder())
     return Status(Status::ERROR, "Failed to initialize the decoder.");
-  std::cout << "PointCloudDecoder::Decoding Geometry data: ";
   if (!DecodeGeometryData())
     return Status(Status::ERROR, "Failed to decode geometry data.");
   if (!DecodePointAttributes())

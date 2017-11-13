@@ -36,7 +36,6 @@ public:
     MeshDecompression::eStatus Run(const char* pCompressedData,
                                    const size_t compressedDataSizeInBytes)
     {
-        std::cout << "MeshDecompression::Run() - Starting\n";
         mpBuffer->Init(pCompressedData, compressedDataSizeInBytes);
 
         const auto type_statusor = ::draco::Decoder::GetEncodedGeometryType(mpBuffer.get());
@@ -62,8 +61,6 @@ public:
         }
 
         mpMesh = std::move(statusor).value();
-        ;
-        std::cout << "MeshDecompression::Run() - Ending";
         return eStatus::SUCCEED;
     }
 

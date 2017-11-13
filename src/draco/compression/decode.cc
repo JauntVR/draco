@@ -117,7 +117,6 @@ Status Decoder::DecodeBufferToGeometry(DecoderBuffer *in_buffer,
   if (header.encoder_type != TRIANGULAR_MESH) {
     return Status(Status::ERROR, "Input is not a mesh.");
   }
-  std::cout << "Decoding mesh type: ";
   DRACO_ASSIGN_OR_RETURN(std::unique_ptr<MeshDecoder> decoder,
       CreateMeshDecoder(header.encoder_method))
 
