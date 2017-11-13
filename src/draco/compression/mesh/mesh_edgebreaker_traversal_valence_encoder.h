@@ -19,6 +19,8 @@
 #include "draco/core/symbol_encoding.h"
 #include "draco/core/varint_encoding.h"
 
+#include "draco/psy/psy_draco.h"
+
 namespace draco {
 
 // Predictive encoder for the Edgebreaker symbols based on valences of the
@@ -43,6 +45,10 @@ class MeshEdgeBreakerTraversalValenceEncoder
         max_valence_(7) {}
 
   bool Init(MeshEdgeBreakerEncoderImplInterface *encoder) {
+
+    // psy_draco.h
+    PSY_DRACO_PROFILE_SECTION("MeshEdgeBreakerEncoderImplInterface::Init");
+
     if (!MeshEdgeBreakerTraversalEncoder::Init(encoder))
       return false;
     min_valence_ = 2;

@@ -25,6 +25,8 @@
 #include "draco/mesh/edgebreaker_traverser.h"
 #include "draco/mesh/prediction_degree_traverser.h"
 
+#include "draco/psy/psy_draco.h"
+
 namespace draco {
 
 // Types of "free" edges that are used during topology decoding.
@@ -216,6 +218,7 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::CreateAttributesDecoder(
 
 template <class TraversalDecoder>
 bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
+  PSY_DRACO_PROFILE_SECTION("DecodeConnectivity");
   num_new_vertices_ = 0;
   new_to_parent_vertex_map_.clear();
   if (decoder_->bitstream_version() < DRACO_BITSTREAM_VERSION(2, 2)) {
@@ -331,6 +334,7 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
     if (topology_split_decoded_bytes == -1)
       return false;
   } else {
+    PSY_DRACO_PROFILE_SECTION("DecodeHoleAndTopologySplitEvents");
     if (DecodeHoleAndTopologySplitEvents(decoder_->buffer()) == -1)
       return false;
   }
@@ -349,9 +353,12 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
   if (!traversal_decoder_.Start(&traversal_end_buffer))
     return false;
 
-  const int num_connectivity_verts = DecodeConnectivity(num_encoded_symbols);
-  if (num_connectivity_verts == -1)
-    return false;
+  {
+    PSY_DRACO_PROFILE_SECTION("DecodeConnectivity from symbols");
+    const int num_connectivity_verts = DecodeConnectivity(num_encoded_symbols);
+    if (num_connectivity_verts == -1)
+      return false;
+  }
 
   // Set the main buffer to the end of the traversal.
   decoder_->buffer()->Init(traversal_end_buffer.data_head(),
@@ -381,9 +388,12 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
 
   // Update vertex to corner mapping on boundary vertices as it was not set
   // correctly in the previous steps.
-  for (int i = 0; i < corner_table_->num_vertices(); ++i) {
-    if (is_vert_hole_[i]) {
-      corner_table_->UpdateVertexToCornerMap(VertexIndex(i));
+  {
+    PSY_DRACO_PROFILE_SECTION("UpdateVerticesToCornerMap");
+    for (int i = 0; i < corner_table_->num_vertices(); ++i) {
+      if (is_vert_hole_[i]) {
+        corner_table_->UpdateVertexToCornerMap(VertexIndex(i));
+      }
     }
   }
 

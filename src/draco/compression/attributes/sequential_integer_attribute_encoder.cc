@@ -18,6 +18,7 @@
 #include "draco/compression/attributes/prediction_schemes/prediction_scheme_wrap_encoding_transform.h"
 #include "draco/core/bit_utils.h"
 #include "draco/core/symbol_encoding.h"
+#include "draco/psy/psy_draco.h"
 
 namespace draco {
 
@@ -98,6 +99,7 @@ SequentialIntegerAttributeEncoder::CreateIntPredictionScheme(
 
 bool SequentialIntegerAttributeEncoder::EncodeValues(
     const std::vector<PointIndex> &point_ids, EncoderBuffer *out_buffer) {
+  PSY_DRACO_PROFILE_SECTION("SequentialIntegerAttributeEncoder(Base)::EncodeValues");
   // Initialize general quantization data.
   const PointAttribute *const attrib = attribute();
   if (attrib->size() == 0)
@@ -130,6 +132,7 @@ bool SequentialIntegerAttributeEncoder::EncodeValues(
   // All integer values are initialized. Process them using the prediction
   // scheme if we have one.
   if (prediction_scheme_) {
+    PSY_DRACO_PROFILE_SECTION("ComputeCorrectionValues");
     prediction_scheme_->ComputeCorrectionValues(
         portable_attribute_data, &encoded_data[0], num_values, num_components,
         point_ids.data());
@@ -137,6 +140,7 @@ bool SequentialIntegerAttributeEncoder::EncodeValues(
 
   if (prediction_scheme_ == nullptr ||
       !prediction_scheme_->AreCorrectionsPositive()) {
+    PSY_DRACO_PROFILE_SECTION("ConvertSignedIntsToSymbols");
     const int32_t *const input =
         prediction_scheme_ ? encoded_data.data() : portable_attribute_data;
     ConvertSignedIntsToSymbols(input, num_values,
@@ -145,6 +149,7 @@ bool SequentialIntegerAttributeEncoder::EncodeValues(
 
   if (encoder() == nullptr || encoder()->options()->GetGlobalBool(
                                   "use_built_in_attribute_compression", true)) {
+    PSY_DRACO_PROFILE_SECTION("EncodeSymbols");
     out_buffer->Encode(static_cast<uint8_t>(1));
     if (!EncodeSymbols(reinterpret_cast<uint32_t *>(encoded_data.data()),
                        point_ids.size() * num_components, num_components,
