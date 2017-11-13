@@ -13,6 +13,21 @@
 
 namespace psy
 {
+
+static IProfilerManager* gmpProfilerManager = nullptr;
+IProfilerManager* GetProfilerManager()
+{
+    return gmpProfilerManager;
+}
+void SetProfilerManager(IProfilerManager* pProp)
+{
+    if (gmpProfilerManager)
+    {
+        delete gmpProfilerManager;
+    }
+    gmpProfilerManager = pProp;
+}
+
 namespace draco
 {
 
@@ -96,11 +111,13 @@ public:
                                  const size_t indicesCount,
                                  const unsigned char* pVisibilityAttributes)
     {
+        PSY_DRACO_PROFILE_SECTION("MeshCompression::Impl::Run");
         // reset encode buffer
         mpBuffer->Resize(0);
 
         // update faces
         {
+            PSY_DRACO_PROFILE_SECTION("MeshCompression::Impl::Run (update faces)");
             const size_t faces_count = indicesCount / 3;
             {
                 // - we can using SetFace() to update a face at an index,
@@ -121,6 +138,7 @@ public:
 
         // update point attributes
         {
+            PSY_DRACO_PROFILE_SECTION("MeshCompression::Impl::Run (update attributes)");
             mpMesh->set_num_points(static_cast<int32_t>(verticesCount));
 
             // vertex positions
@@ -141,10 +159,13 @@ public:
         }
 
         // run compression
-        mStatus = mpEncoder->EncodeMeshToBuffer(*mpMesh, mpBuffer.get());
-        if (!mStatus.ok())
         {
-            return eStatus::FAILED;
+            PSY_DRACO_PROFILE_SECTION("MeshCompression::Impl::Run (EncodeMeshToBuffer)");
+            mStatus = mpEncoder->EncodeMeshToBuffer(*mpMesh, mpBuffer.get());
+            if (!mStatus.ok())
+            {
+                return eStatus::FAILED;
+            }
         }
 
         return eStatus::SUCCEED;

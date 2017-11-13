@@ -17,6 +17,8 @@
 #include "draco/compression/mesh/mesh_edgebreaker_traversal_predictive_decoder.h"
 #include "draco/compression/mesh/mesh_edgebreaker_traversal_valence_decoder.h"
 
+#include "draco/psy/psy_draco.h"
+
 namespace draco {
 
 MeshEdgeBreakerDecoder::MeshEdgeBreakerDecoder() {}
@@ -26,6 +28,9 @@ bool MeshEdgeBreakerDecoder::CreateAttributesDecoder(int32_t att_decoder_id) {
 }
 
 bool MeshEdgeBreakerDecoder::InitializeDecoder() {
+
+  PSY_DRACO_PROFILE_SECTION("MeshEdgeBreakerEncoder::InitializeDecoder");
+
   uint8_t traversal_decoder_type;
   if (!buffer()->Decode(&traversal_decoder_type))
     return false;
@@ -61,6 +66,7 @@ bool MeshEdgeBreakerDecoder::DecodeConnectivity() {
 }
 
 bool MeshEdgeBreakerDecoder::OnAttributesDecoded() {
+  PSY_DRACO_PROFILE_SECTION("MeshEdgeBreakerEncoder::InitializeDecoder");
   return impl_->OnAttributesDecoded();
 }
 
