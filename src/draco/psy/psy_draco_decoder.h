@@ -11,6 +11,7 @@
 #define PSY_DRACO_MESH_DECOMPRESSION_H
 
 #include <memory>
+#include <vector>
 #include "psy_draco.h"
 
 namespace psy
@@ -36,6 +37,7 @@ public:
 
     size_t GetVerticesCount() const;
     size_t GetFacesCount() const;
+    std::vector<int> GetConnectivityVsAttributeSize() const;
     void GetMesh(float* pVertices,
                  const size_t vertexStride,
                  unsigned int* pIndices,

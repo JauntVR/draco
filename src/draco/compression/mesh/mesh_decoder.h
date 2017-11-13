@@ -53,6 +53,11 @@ class MeshDecoder : public PointCloudDecoder {
     return nullptr;
   }
 
+  virtual void *GetConnectivityVsAttributeSize(std::vector<int>& sizes)
+  {
+      return nullptr;
+  }
+
   Mesh *mesh() const { return mesh_; }
 
  protected:

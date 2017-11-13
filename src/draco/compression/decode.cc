@@ -119,10 +119,13 @@ Status Decoder::DecodeBufferToGeometry(DecoderBuffer *in_buffer,
   }
   std::cout << "Decoding mesh type: ";
   DRACO_ASSIGN_OR_RETURN(std::unique_ptr<MeshDecoder> decoder,
-                         CreateMeshDecoder(header.encoder_method))
+      CreateMeshDecoder(header.encoder_method))
 
-  DRACO_RETURN_IF_ERROR(decoder->Decode(options_, in_buffer, out_geometry))
+  decoder->Decode(options_, in_buffer, out_geometry);
+
+  decoder->GetConnectivityVsAttributeSize(mSizes);
   return OkStatus();
+
 #else
   return Status(Status::ERROR, "Unsupported geometry type.");
 #endif
@@ -130,6 +133,11 @@ Status Decoder::DecodeBufferToGeometry(DecoderBuffer *in_buffer,
 
 void Decoder::SetSkipAttributeTransform(GeometryAttribute::Type att_type) {
   options_.SetAttributeBool(att_type, "skip_attribute_transform", true);
+}
+
+std::vector<int> Decoder::GetConnectivityVsAttributeData()
+{
+    return mSizes;
 }
 
 }  // namespace draco

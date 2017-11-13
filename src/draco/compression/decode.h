@@ -57,6 +57,8 @@ class Decoder {
                                 PointCloud *out_geometry);
   Status DecodeBufferToGeometry(DecoderBuffer *in_buffer, Mesh *out_geometry);
 
+  std::vector<int> GetConnectivityVsAttributeData();
+
   // When set, the decoder is going to skip attribute transform for a given
   // attribute type. For example for quantized attributes, the decoder would
   // skip the dequantization step and the returned geometry would contain an
@@ -72,6 +74,7 @@ class Decoder {
 
  private:
   DecoderOptions options_;
+  std::vector<int> mSizes;
 };
 
 }  // namespace draco

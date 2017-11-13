@@ -100,6 +100,11 @@ public:
         }
     }
 
+    std::vector<int> GetConnectivityVsAttributeSize()
+    {
+        return mpDecoder->GetConnectivityVsAttributeData();
+    }
+
     void GetMesh(float* pVertices,
                  const size_t vertexStride,
                  unsigned int* pIndices,
@@ -201,6 +206,11 @@ size_t MeshDecompression::GetFacesCount() const
 const char* MeshDecompression::GetLastErrorMessage() const
 {
     return mpImpl->mStatus.error_msg();
+}
+
+std::vector<int> MeshDecompression::GetConnectivityVsAttributeSize() const
+{
+    return mpImpl->GetConnectivityVsAttributeSize();
 }
 
 }; // namespace draco

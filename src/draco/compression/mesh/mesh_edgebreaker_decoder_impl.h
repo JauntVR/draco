@@ -66,6 +66,15 @@ class MeshEdgeBreakerDecoderImpl : public MeshEdgeBreakerDecoderImplInterface {
     return corner_table_.get();
   }
 
+  int GetTotalSize() override
+  {
+      return mTotalSize;
+  }
+  int GetSizeOfIndicies() override
+  {
+      return mIndicesSize;
+  }
+
  private:
   // Creates a vertex traversal sequencer for the specified |TraverserT| type.
   template <class TraverserT>
@@ -215,6 +224,10 @@ class MeshEdgeBreakerDecoderImpl : public MeshEdgeBreakerDecoderImplInterface {
   std::vector<AttributeData> attribute_data_;
 
   TraversalDecoderT traversal_decoder_;
+
+  int mTotalSize;
+  int mIndicesSize;
+
 };
 
 }  // namespace draco
