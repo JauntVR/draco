@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 #include "draco/compression/attributes/sequential_attribute_encoder.h"
+#include "draco/psy/psy_draco.h"
 
 namespace draco {
 
@@ -45,6 +46,7 @@ bool SequentialAttributeEncoder::TransformAttributeToPortableFormat(
 
 bool SequentialAttributeEncoder::EncodePortableAttribute(
     const std::vector<PointIndex> &point_ids, EncoderBuffer *out_buffer) {
+  PSY_DRACO_PROFILE_SECTION("EncodePortableAttribute::EncodeValues (Lossless)");
   // Lossless encoding of the input values.
   if (!EncodeValues(point_ids, out_buffer))
     return false;
@@ -59,9 +61,11 @@ bool SequentialAttributeEncoder::EncodeDataNeededByPortableTransform(
 
 bool SequentialAttributeEncoder::EncodeValues(
     const std::vector<PointIndex> &point_ids, EncoderBuffer *out_buffer) {
+  PSY_DRACO_PROFILE_SECTION("EncodeValues (Raw format)");
   const int entry_size = attribute_->byte_stride();
   const std::unique_ptr<uint8_t[]> value_data_ptr(new uint8_t[entry_size]);
   uint8_t *const value_data = value_data_ptr.get();
+  // TODO[nbc]: check identity mapping first for speeding up?
   // Encode all attribute values in their native raw format.
   for (uint32_t i = 0; i < point_ids.size(); ++i) {
     const AttributeValueIndex entry_id = attribute_->mapped_index(point_ids[i]);

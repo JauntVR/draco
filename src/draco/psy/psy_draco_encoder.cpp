@@ -13,6 +13,21 @@
 
 namespace psy
 {
+
+static IProfilerManager* gmpProfilerManager = nullptr;
+IProfilerManager* GetProfilerManager()
+{
+    return gmpProfilerManager;
+}
+void SetProfilerManager(IProfilerManager* pProp)
+{
+    if (gmpProfilerManager)
+    {
+        delete gmpProfilerManager;
+    }
+    gmpProfilerManager = pProp;
+}
+
 namespace draco
 {
 
@@ -35,25 +50,34 @@ public:
 
         mpMesh.reset(new ::draco::Mesh());
         mpBuffer.reset(new ::draco::EncoderBuffer());
-
         mpEncoder.reset(new ::draco::Encoder());
         {
-            mpEncoder->SetAttributeQuantization(
-                ::draco::GeometryAttribute::POSITION, mVertexPositionQuantizationBitsCount);
-            // Convert compression level to speed (that 0 = slowest, 10 = fastest).
-            const int speed = MAX_COMPRESSION_LEVEL - mCompressionLevel;
-            mpEncoder->SetSpeedOptions(speed, speed);
+            int num_attribs = 1;
 
             ::draco::GeometryAttribute pos_attrib;
-            pos_attrib.Init(::draco::GeometryAttribute::POSITION, nullptr, 3, ::draco::DT_FLOAT32, false, sizeof(float) * 3, 0);
+            pos_attrib.Init(::draco::GeometryAttribute::POSITION,
+                nullptr, 3, ::draco::DT_FLOAT32, false, sizeof(float) * 3, 0);
             mPositionAttributeId = mpMesh->AddAttribute(pos_attrib, true, 0);
 
             if (mHasVisibilityInfo)
             {
                 ::draco::GeometryAttribute vis_attrib;
-                vis_attrib.Init(::draco::GeometryAttribute::GENERIC, nullptr, 1, ::draco::DT_UINT8, false, sizeof(uint8_t), 0);
+                vis_attrib.Init(::draco::GeometryAttribute::GENERIC,
+                    nullptr, 1, ::draco::DT_UINT8, false, sizeof(uint8_t), 0);
                 mVisibilityAttributeId = mpMesh->AddAttribute(vis_attrib, true, 0);
+
+                num_attribs++;
             }
+
+            auto options = ::draco::EncoderOptionsBase<::draco::GeometryAttribute::Type>::CreateDefaultOptions();
+            options.SetAttributeInt(::draco::GeometryAttribute::POSITION,
+                                    "quantization_bits",
+                                    mVertexPositionQuantizationBitsCount);
+            // Convert compression level to speed (that 0 = slowest, 10 = fastest).
+            const int speed = MAX_COMPRESSION_LEVEL - mCompressionLevel;
+            options.SetSpeed(speed, speed);
+            options.SetGlobalBool("split_mesh_on_seams", (num_attribs > 1));
+            mpEncoder->Reset(options);
         }
     }
 
@@ -96,11 +120,13 @@ public:
                                  const size_t indicesCount,
                                  const unsigned char* pVisibilityAttributes)
     {
+        PSY_DRACO_PROFILE_SECTION("MeshCompression::Impl::Run");
         // reset encode buffer
         mpBuffer->Resize(0);
 
         // update faces
         {
+            PSY_DRACO_PROFILE_SECTION("MeshCompression::Impl::Run (update faces)");
             const size_t faces_count = indicesCount / 3;
             {
                 // - we can using SetFace() to update a face at an index,
@@ -121,6 +147,7 @@ public:
 
         // update point attributes
         {
+            PSY_DRACO_PROFILE_SECTION("MeshCompression::Impl::Run (update attributes)");
             mpMesh->set_num_points(static_cast<int32_t>(verticesCount));
 
             // vertex positions
@@ -141,10 +168,13 @@ public:
         }
 
         // run compression
-        mStatus = mpEncoder->EncodeMeshToBuffer(*mpMesh, mpBuffer.get());
-        if (!mStatus.ok())
         {
-            return eStatus::FAILED;
+            PSY_DRACO_PROFILE_SECTION("MeshCompression::Impl::Run (EncodeMeshToBuffer)");
+            mStatus = mpEncoder->EncodeMeshToBuffer(*mpMesh, mpBuffer.get());
+            if (!mStatus.ok())
+            {
+                return eStatus::FAILED;
+            }
         }
 
         return eStatus::SUCCEED;

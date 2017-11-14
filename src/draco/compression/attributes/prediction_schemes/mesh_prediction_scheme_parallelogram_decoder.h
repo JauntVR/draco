@@ -17,6 +17,7 @@
 
 #include "draco/compression/attributes/prediction_schemes/mesh_prediction_scheme_decoder.h"
 #include "draco/compression/attributes/prediction_schemes/mesh_prediction_scheme_parallelogram_shared.h"
+#include "draco/psy/psy_draco.h"
 
 namespace draco {
 
@@ -58,6 +59,7 @@ bool MeshPredictionSchemeParallelogramDecoder<DataTypeT, TransformT,
     ComputeOriginalValues(const CorrType *in_corr, DataTypeT *out_data,
                           int /* size */, int num_components,
                           const PointIndex * /* entry_to_point_id_map */) {
+  PSY_DRACO_PROFILE_SECTION("ParallelogramDecoder::ComputeOriginalValues");
   this->transform().Initialize(num_components);
 
   const CornerTable *const table = this->mesh_data().corner_table();

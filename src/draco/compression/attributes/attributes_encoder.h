@@ -18,6 +18,7 @@
 #include "draco/attributes/point_attribute.h"
 #include "draco/core/encoder_buffer.h"
 #include "draco/point_cloud/point_cloud.h"
+#include "draco/psy/psy_draco.h"
 
 namespace draco {
 
@@ -48,15 +49,24 @@ class AttributesEncoder {
 
   // Encode attribute data to the target buffer.
   virtual bool EncodeAttributes(EncoderBuffer *out_buffer) {
-    if (!TransformAttributesToPortableFormat())
-      return false;
-    if (!EncodePortableAttributes(out_buffer))
-      return false;
+    {
+      PSY_DRACO_PROFILE_SECTION("TransformAttributesToPortableFormat");
+      if (!TransformAttributesToPortableFormat())
+        return false;
+    }
+    {
+      PSY_DRACO_PROFILE_SECTION("EncodePortableAttributes");
+      if (!EncodePortableAttributes(out_buffer))
+        return false;
+    }
     // Encode data needed by portable transforms after the attribute is encoded.
     // This corresponds to the order in which the data is going to be decoded by
     // the decoder.
-    if (!EncodeDataNeededByPortableTransforms(out_buffer))
-      return false;
+    {
+      PSY_DRACO_PROFILE_SECTION("EncodeDataNeededByPortableTransforms");
+      if (!EncodeDataNeededByPortableTransforms(out_buffer))
+        return false;
+    }
     return true;
   }
 

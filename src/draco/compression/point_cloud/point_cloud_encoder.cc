@@ -16,6 +16,8 @@
 
 #include "draco/metadata/metadata_encoder.h"
 
+#include "draco/psy/psy_draco.h"
+
 namespace draco {
 
 PointCloudEncoder::PointCloudEncoder()
@@ -87,6 +89,8 @@ Status PointCloudEncoder::EncodeMetadata() {
 }
 
 bool PointCloudEncoder::EncodePointAttributes() {
+  PSY_DRACO_PROFILE_SECTION("EncodePointAttributes");
+
   if (!GenerateAttributesEncoders())
     return false;
 

@@ -27,6 +27,8 @@
 #include "draco/mesh/mesh_misc_functions.h"
 #include "draco/mesh/prediction_degree_traverser.h"
 
+#include "draco/psy/psy_draco.h"
+
 namespace draco {
 
 typedef CornerIndex CornerIndex;
@@ -256,6 +258,8 @@ bool MeshEdgeBreakerEncoderImpl<TraversalEncoder>::
 
 template <class TraversalEncoder>
 bool MeshEdgeBreakerEncoderImpl<TraversalEncoder>::EncodeConnectivity() {
+  PSY_DRACO_PROFILE_SECTION("EncodeConnectivity");
+
   // To encode the mesh, we need face connectivity data stored in a corner
   // table. To compute the connectivity we must use indices associated with
   // POSITION attribute, because they define which edges can be connected
@@ -263,8 +267,10 @@ bool MeshEdgeBreakerEncoderImpl<TraversalEncoder>::EncodeConnectivity() {
   // we break the mesh along attribute seams and use the same connectivity for
   // all attributes.
   if (use_single_connectivity_) {
+    PSY_DRACO_PROFILE_SECTION("CreateCornerTableFromAllAttributes");
     corner_table_ = CreateCornerTableFromAllAttributes(mesh_);
   } else {
+    PSY_DRACO_PROFILE_SECTION("CreateCornerTable");
     corner_table_ = CreateCornerTable(mesh_);
   }
   if (corner_table_ == nullptr) {
@@ -321,60 +327,63 @@ bool MeshEdgeBreakerEncoderImpl<TraversalEncoder>::EncodeConnectivity() {
   traversal_encoder_.Start();
 
   std::vector<CornerIndex> init_face_connectivity_corners;
-  // Traverse the surface starting from each unvisited corner.
-  for (int c_id = 0; c_id < num_corners; ++c_id) {
-    CornerIndex corner_index(c_id);
-    const FaceIndex face_id = corner_table_->Face(corner_index);
-    if (visited_faces_[face_id.value()])
-      continue;  // Face has been already processed.
-    if (corner_table_->IsDegenerated(face_id))
-      continue;  // Ignore degenerated faces.
+  {
+    PSY_DRACO_PROFILE_SECTION("Traverse the surface");
+    // Traverse the surface starting from each unvisited corner.
+    for (int c_id = 0; c_id < num_corners; ++c_id) {
+      CornerIndex corner_index(c_id);
+      const FaceIndex face_id = corner_table_->Face(corner_index);
+      if (visited_faces_[face_id.value()])
+        continue;  // Face has been already processed.
+      if (corner_table_->IsDegenerated(face_id))
+        continue;  // Ignore degenerated faces.
 
-    CornerIndex start_corner;
-    const bool interior_config =
-        FindInitFaceConfiguration(face_id, &start_corner);
-    traversal_encoder_.EncodeStartFaceConfiguration(interior_config);
+      CornerIndex start_corner;
+      const bool interior_config =
+          FindInitFaceConfiguration(face_id, &start_corner);
+      traversal_encoder_.EncodeStartFaceConfiguration(interior_config);
 
-    if (interior_config) {
-      // Select the correct vertex on the face as the root.
-      corner_index = start_corner;
-      const VertexIndex vert_id = corner_table_->Vertex(corner_index);
-      // Mark all vertices of a given face as visited.
-      const VertexIndex next_vert_id =
-          corner_table_->Vertex(corner_table_->Next(corner_index));
-      const VertexIndex prev_vert_id =
-          corner_table_->Vertex(corner_table_->Previous(corner_index));
+      if (interior_config) {
+        // Select the correct vertex on the face as the root.
+        corner_index = start_corner;
+        const VertexIndex vert_id = corner_table_->Vertex(corner_index);
+        // Mark all vertices of a given face as visited.
+        const VertexIndex next_vert_id =
+            corner_table_->Vertex(corner_table_->Next(corner_index));
+        const VertexIndex prev_vert_id =
+            corner_table_->Vertex(corner_table_->Previous(corner_index));
 
-      visited_vertex_ids_[vert_id.value()] = true;
-      visited_vertex_ids_[next_vert_id.value()] = true;
-      visited_vertex_ids_[prev_vert_id.value()] = true;
-      // New traversal started. Initiate it's length with the first vertex.
-      vertex_traversal_length_.push_back(1);
+        visited_vertex_ids_[vert_id.value()] = true;
+        visited_vertex_ids_[next_vert_id.value()] = true;
+        visited_vertex_ids_[prev_vert_id.value()] = true;
+        // New traversal started. Initiate it's length with the first vertex.
+        vertex_traversal_length_.push_back(1);
 
-      // Mark the face as visited.
-      visited_faces_[face_id.value()] = true;
-      // Start compressing from the opposite face of the "next" corner. This way
-      // the first encoded corner corresponds to the tip corner of the regular
-      // edgebreaker traversal (essentially the initial face can be then viewed
-      // as a TOPOLOGY_C face).
-      init_face_connectivity_corners.push_back(
-          corner_table_->Next(corner_index));
-      const CornerIndex opp_id =
-          corner_table_->Opposite(corner_table_->Next(corner_index));
-      const FaceIndex opp_face_id = corner_table_->Face(opp_id);
-      if (opp_face_id != kInvalidFaceIndex &&
-          !visited_faces_[opp_face_id.value()]) {
-        if (!EncodeConnectivityFromCorner(opp_id))
+        // Mark the face as visited.
+        visited_faces_[face_id.value()] = true;
+        // Start compressing from the opposite face of the "next" corner. This way
+        // the first encoded corner corresponds to the tip corner of the regular
+        // edgebreaker traversal (essentially the initial face can be then viewed
+        // as a TOPOLOGY_C face).
+        init_face_connectivity_corners.push_back(
+            corner_table_->Next(corner_index));
+        const CornerIndex opp_id =
+            corner_table_->Opposite(corner_table_->Next(corner_index));
+        const FaceIndex opp_face_id = corner_table_->Face(opp_id);
+        if (opp_face_id != kInvalidFaceIndex &&
+            !visited_faces_[opp_face_id.value()]) {
+          if (!EncodeConnectivityFromCorner(opp_id))
+            return false;
+        }
+      } else {
+        // Boundary configuration. We start on a boundary rather than on a face.
+        // First encode the hole that's opposite to the start_corner.
+        EncodeHole(corner_table_->Next(start_corner), true);
+        // Start processing the face opposite to the boundary edge (the face
+        // containing the start_corner).
+        if (!EncodeConnectivityFromCorner(start_corner))
           return false;
       }
-    } else {
-      // Boundary configuration. We start on a boundary rather than on a face.
-      // First encode the hole that's opposite to the start_corner.
-      EncodeHole(corner_table_->Next(start_corner), true);
-      // Start processing the face opposite to the boundary edge (the face
-      // containing the start_corner).
-      if (!EncodeConnectivityFromCorner(start_corner))
-        return false;
     }
   }
   // Reverse the order of connectivity corners to match the order in which
@@ -676,6 +685,8 @@ bool MeshEdgeBreakerEncoderImpl<TraversalEncoder>::IsLeftFaceVisited(
 
 template <class TraversalEncoder>
 bool MeshEdgeBreakerEncoderImpl<TraversalEncoder>::FindHoles() {
+  PSY_DRACO_PROFILE_SECTION("FindHoles");
+
   // TODO(ostava): Add more error checking for invalid geometry data.
   const int num_corners = corner_table_->num_corners();
   // Go over all corners and detect non-visited open boundaries
@@ -745,6 +756,8 @@ void MeshEdgeBreakerEncoderImpl<
 
 template <class TraversalEncoder>
 bool MeshEdgeBreakerEncoderImpl<TraversalEncoder>::InitAttributeData() {
+  PSY_DRACO_PROFILE_SECTION("InitAttributeData");
+
   if (use_single_connectivity_)
     return true;  // All attributes use the same connectivity.
 
@@ -770,8 +783,11 @@ bool MeshEdgeBreakerEncoderImpl<TraversalEncoder>::InitAttributeData() {
         .encoding_data.vertex_to_encoded_attribute_value_index_map.assign(
             corner_table_->num_corners(), -1);
     attribute_data_[data_index].encoding_data.num_values = 0;
-    attribute_data_[data_index].connectivity_data.InitFromAttribute(
-        mesh_, corner_table_.get(), att);
+    {
+        PSY_DRACO_PROFILE_SECTION("InitFromAttribute");
+        attribute_data_[data_index].connectivity_data.InitFromAttribute(
+            mesh_, corner_table_.get(), att);
+    }
     ++data_index;
   }
   return true;
