@@ -168,6 +168,26 @@ class MeshEdgeBreakerTraversalValenceDecoder
     vertex_valences_[dest] += vertex_valences_[source];
   }
 
+  void CopyTo(MeshEdgeBreakerTraversalValenceDecoder& rOther) {
+    MeshEdgeBreakerTraversalDecoder::CopyTo(*((MeshEdgeBreakerTraversalDecoder*)&rOther));
+    rOther.corner_table_ = corner_table_;
+    rOther.num_vertices_ = num_vertices_;
+    rOther.vertex_valences_ = vertex_valences_;
+    rOther.last_symbol_ = last_symbol_;
+    rOther.active_context_ = active_context_;
+    rOther.min_valence_ = min_valence_;
+    rOther.max_valence_ = max_valence_;
+    rOther.context_symbols_ = context_symbols_;
+    rOther.context_counters_ = context_counters_;
+  }
+
+  std::unique_ptr<MeshEdgeBreakerTraversalValenceDecoder> Clone() {
+    auto ret = std::unique_ptr<MeshEdgeBreakerTraversalValenceDecoder>(
+        new MeshEdgeBreakerTraversalValenceDecoder());
+    CopyTo(*ret);
+    return std::move(ret);
+  }
+
  private:
   const CornerTable *corner_table_;
   int num_vertices_;

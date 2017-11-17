@@ -27,7 +27,7 @@ public:
         SUCCEED = 0,
         FAILED
     };
-    
+
     /*
     * - compressionLevel (compression level)
     *   + {0 = lowest, 10 = highest} compression ratio.
@@ -44,12 +44,17 @@ public:
                     bool hasVisibilityInfo = false);
     ~MeshCompression();
 
+    void SetVertexPositionQuantizationBitsCount(const int);
+
+    bool IsVisiblityInfoCompressing() const;
+
     eStatus Run(const float* pVertices,
                 const size_t vertexStride,
                 const size_t verticesCount,
                 const unsigned int* pIndices,
                 const size_t indicesCount,
-                const unsigned char* pVisibilityAttributes);
+                const unsigned char* pVisibilityAttributes,
+                const MeshType meshType = MeshType::FULL_MESH);
 
     const char* GetCompressedData() const;
     size_t GetCompressedDataSizeInBytes() const;
