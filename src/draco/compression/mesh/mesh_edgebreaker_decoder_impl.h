@@ -66,6 +66,8 @@ class MeshEdgeBreakerDecoderImpl : public MeshEdgeBreakerDecoderImplInterface {
     return corner_table_.get();
   }
 
+  std::unique_ptr<MeshEdgeBreakerDecoderImplInterface> Clone() override;
+
  private:
   // Creates a vertex traversal sequencer for the specified |TraverserT| type.
   template <class TraverserT>

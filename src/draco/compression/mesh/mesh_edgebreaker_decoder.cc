@@ -17,20 +17,34 @@
 #include "draco/compression/mesh/mesh_edgebreaker_traversal_predictive_decoder.h"
 #include "draco/compression/mesh/mesh_edgebreaker_traversal_valence_decoder.h"
 
-#include "draco/psy/psy_draco.h"
-
 namespace draco {
 
 MeshEdgeBreakerDecoder::MeshEdgeBreakerDecoder() {}
+
+std::unique_ptr<MeshEdgeBreakerDecoderImplInterface>
+MeshEdgeBreakerDecoder::CloneDecoderImplState() {
+  if (impl_) {
+    return impl_->Clone();
+  }
+  return nullptr;
+}
+
+void MeshEdgeBreakerDecoder::SetDecoderImplState(
+  MeshEdgeBreakerDecoderImplInterface& rDecoderState) {
+  if (impl_) {
+      impl_.reset();
+  }
+  impl_ = std::move(rDecoderState.Clone());
+  if (impl_) {
+    impl_->Init(this);
+  }
+}
 
 bool MeshEdgeBreakerDecoder::CreateAttributesDecoder(int32_t att_decoder_id) {
   return impl_->CreateAttributesDecoder(att_decoder_id);
 }
 
 bool MeshEdgeBreakerDecoder::InitializeDecoder() {
-
-  PSY_DRACO_PROFILE_SECTION("MeshEdgeBreakerEncoder::InitializeDecoder");
-
   uint8_t traversal_decoder_type;
   if (!buffer()->Decode(&traversal_decoder_type))
     return false;
@@ -66,7 +80,6 @@ bool MeshEdgeBreakerDecoder::DecodeConnectivity() {
 }
 
 bool MeshEdgeBreakerDecoder::OnAttributesDecoded() {
-  PSY_DRACO_PROFILE_SECTION("MeshEdgeBreakerEncoder::InitializeDecoder");
   return impl_->OnAttributesDecoded();
 }
 

@@ -8,29 +8,84 @@
 */
 
 #include "psy_draco_decoder.h"
-#include "draco/compression/decode.h"
 #include "draco/attributes/point_attribute.h"
+#include "draco/compression/mesh/mesh_edgebreaker_decoder.h"
 
 namespace psy
 {
 namespace draco
 {
 
+class MeshEdgeBreakerDecompression : protected ::draco::MeshEdgeBreakerDecoder
+{
+public:
+    MeshEdgeBreakerDecompression() : ::draco::MeshEdgeBreakerDecoder()
+    {
+        mIsIncrementalDecompression = false;
+        mVerticesCount = 0;
+    }
+
+    ::draco::Status Decompress(::draco::DecoderBuffer& rBuffer,
+                               ::draco::Mesh& rMesh,
+                               const bool isIncrementalDecompression)
+    {
+        mIsIncrementalDecompression = isIncrementalDecompression;
+        const auto status = Decode(::draco::DecoderOptions(), &rBuffer, &rMesh);
+        mVerticesCount = (status.ok() ? rMesh.num_points() : 0);
+        return status;
+    }
+protected:
+    bool InitializeDecoder() override
+    {
+        if (mIsIncrementalDecompression)
+        {
+            SetDecoderImplState(*mpDecoderState);
+            return true;
+        }
+        return ::draco::MeshEdgeBreakerDecoder::InitializeDecoder();
+    }
+
+    bool DecodeConnectivity() override
+    {
+        if (mIsIncrementalDecompression)
+        {
+            point_cloud()->set_num_points(mVerticesCount);
+            return true;
+        }
+        const auto status = ::draco::MeshEdgeBreakerDecoder::DecodeConnectivity();
+        if (status)
+        {
+            mpDecoderState = std::move(CloneDecoderImplState());
+        }
+        return status;
+    }
+private:
+    bool mIsIncrementalDecompression;
+    size_t mVerticesCount;
+    std::unique_ptr<::draco::MeshEdgeBreakerDecoderImplInterface> mpDecoderState;
+};
+
 class MeshDecompression::Impl
 {
 public:
     Impl()
     {
-        mpMesh.reset(new ::draco::Mesh());
         mpBuffer.reset(new ::draco::DecoderBuffer());
-        mpDecoder.reset(new ::draco::Decoder());
+        mpMesh.reset(new ::draco::Mesh());
+        mpMeshDecompression.reset(new MeshEdgeBreakerDecompression());
     }
 
     ~Impl()
     {
-        mpMesh.reset();
         mpBuffer.reset();
-        mpDecoder.reset();
+        mpMesh.reset();
+        mpMeshDecompression.reset();
+    }
+
+    void DecodeHeader()
+    {
+        // simple decoding for version 1.0 only
+        mpBuffer->Decode(&mDecompressedHeader, sizeof(mDecompressedHeader));
     }
 
     MeshDecompression::eStatus Run(const char* pCompressedData,
@@ -38,29 +93,27 @@ public:
     {
         mpBuffer->Init(pCompressedData, compressedDataSizeInBytes);
 
-        const auto type_statusor = ::draco::Decoder::GetEncodedGeometryType(mpBuffer.get());
-        mStatus = type_statusor.status();
-        if (!type_statusor.ok())
-        {   
-            return eStatus::FAILED;
-        }
+        // decode header
+        DecodeHeader();
+        const bool is_incremental_decompression = (mDecompressedHeader.mMeshType == MeshType::INCREMENTAL_MESH);
 
-        const ::draco::EncodedGeometryType geom_type = type_statusor.value();
-        if (geom_type != ::draco::TRIANGULAR_MESH)
+        // reset mesh
+        mpMesh->set_num_points(0);
+        if (false == is_incremental_decompression)
         {
-            mStatus = ::draco::Status(::draco::Status::Code::ERROR,
-                                      "invalid encoded geometry type");
-            return eStatus::FAILED;
+            mpMesh->SetNumFaces(0);
         }
-
-        auto statusor = mpDecoder->DecodeMeshFromBuffer(mpBuffer.get());
-        if (!statusor.ok())
+        for (auto i = mpMesh->num_attributes() - 1; i >= 0; --i)
         {
-            mStatus = statusor.status();
-            return eStatus::FAILED;
+            mpMesh->DeleteAttribute(i);
         }
 
-        mpMesh = std::move(statusor).value();
+        mStatus = mpMeshDecompression->Decompress(*mpBuffer, *mpMesh, is_incremental_decompression);
+
+        if (!mStatus.ok())
+        {
+            return eStatus::FAILED;
+        }
 
         return eStatus::SUCCEED;
     }
@@ -76,7 +129,7 @@ public:
         if (pPointAttribute->is_mapping_identity())
         {
             const uint8_t* p_src = pPointAttribute->buffer()->data();
-            if (stride == src_stride)
+            if (stride == static_cast<size_t>(src_stride))
             {
                 memcpy(p_dst, p_src, verticesCount * data_sz_in_bytes);
             }
@@ -138,9 +191,10 @@ public:
         }
     }
 
-    std::unique_ptr<::draco::Mesh> mpMesh;
-    std::unique_ptr<::draco::DecoderBuffer> mpBuffer;
-    std::unique_ptr<::draco::Decoder> mpDecoder;
+    Header mDecompressedHeader;
+    std::shared_ptr<::draco::Mesh> mpMesh;
+    std::shared_ptr<::draco::DecoderBuffer> mpBuffer;
+    std::unique_ptr<MeshEdgeBreakerDecompression> mpMeshDecompression;
     ::draco::Status mStatus;
 };
 
@@ -176,6 +230,15 @@ void MeshDecompression::GetMesh(float* pVertices,
                         pIndices,
                         pVisibilityAttributes);
     }
+}
+
+const Header* MeshDecompression::GetDecompressedHeader() const
+{
+    if (mpImpl->mStatus.ok())
+    {
+        return &(mpImpl->mDecompressedHeader);
+    }
+    return nullptr;
 }
 
 size_t MeshDecompression::GetVerticesCount() const

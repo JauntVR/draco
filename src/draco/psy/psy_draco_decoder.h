@@ -34,6 +34,7 @@ public:
     eStatus Run(const char* pCompressedData,
                 const size_t compressedDataSizeInBytes);
 
+    const Header* GetDecompressedHeader() const;
     size_t GetVerticesCount() const;
     size_t GetFacesCount() const;
     void GetMesh(float* pVertices,

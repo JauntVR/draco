@@ -40,6 +40,8 @@ class MeshEdgeBreakerDecoderImplInterface {
 
   virtual MeshEdgeBreakerDecoder *GetDecoder() const = 0;
   virtual const CornerTable *GetCornerTable() const = 0;
+
+  virtual std::unique_ptr<MeshEdgeBreakerDecoderImplInterface> Clone() = 0;
 };
 
 }  // namespace draco

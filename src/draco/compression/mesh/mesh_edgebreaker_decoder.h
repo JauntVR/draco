@@ -39,6 +39,9 @@ class MeshEdgeBreakerDecoder : public MeshDecoder {
     return impl_->GetAttributeEncodingData(att_id);
   }
 
+  std::unique_ptr<MeshEdgeBreakerDecoderImplInterface> CloneDecoderImplState();
+  void SetDecoderImplState(MeshEdgeBreakerDecoderImplInterface& rDecoderState);
+
  protected:
   bool InitializeDecoder() override;
   bool CreateAttributesDecoder(int32_t att_decoder_id) override;
