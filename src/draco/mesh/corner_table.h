@@ -52,6 +52,12 @@ class CornerTable {
   static std::unique_ptr<CornerTable> Create(
       const IndexTypeVector<FaceIndex, FaceType> &faces);
 
+  std::unique_ptr<CornerTable> Clone() const {
+    auto corner_table = std::unique_ptr<CornerTable>(new CornerTable());
+    *corner_table = *this;
+    return std::move(corner_table);
+  }
+
   // Initializes the CornerTable from provides set of indexed faces.
   // The input faces can represent a non-manifold topology, in which case the
   // non-manifold edges and vertices are going to be split.

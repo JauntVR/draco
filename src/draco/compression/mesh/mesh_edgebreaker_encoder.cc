@@ -22,6 +22,25 @@ namespace draco {
 
 MeshEdgeBreakerEncoder::MeshEdgeBreakerEncoder() {}
 
+std::unique_ptr<MeshEdgeBreakerEncoderImplInterface>
+MeshEdgeBreakerEncoder::CloneEncoderImplState() {
+  if (impl_) {
+    return impl_->Clone();
+  }
+  return nullptr;
+}
+
+void MeshEdgeBreakerEncoder::SetEncoderImplState(
+  MeshEdgeBreakerEncoderImplInterface& rEncoderState) {
+  if (impl_) {
+      impl_.reset();
+  }
+  impl_ = std::move(rEncoderState.Clone());
+  if (impl_) {
+    impl_->Init(this);
+  }
+}
+
 bool MeshEdgeBreakerEncoder::InitializeEncoder() {
   const bool is_standard_edgebreaker_avaialable =
       options()->IsFeatureSupported(features::kEdgebreaker);

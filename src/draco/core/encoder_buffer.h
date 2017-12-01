@@ -76,6 +76,22 @@ class EncoderBuffer {
   size_t size() const { return buffer_.size(); }
   std::vector<char> *buffer() { return &buffer_; }
 
+  void CopyTo(EncoderBuffer& rOther) {
+    rOther.buffer_ = buffer_;
+    rOther.bit_encoder_reserved_bytes_ = bit_encoder_reserved_bytes_;
+    rOther.encode_bit_sequence_size_ = encode_bit_sequence_size_;
+    if (bit_encoder_) {
+      char* data = rOther.buffer_.data() + (bit_encoder_->bit_buffer_ - buffer_.data());
+      if (!rOther.bit_encoder_) {
+        rOther.bit_encoder_.reset(new BitEncoder(data));
+      }
+      rOther.bit_encoder_->bit_buffer_ = data;
+      rOther.bit_encoder_->bit_offset_ = bit_encoder_->bit_offset_;
+    } else {
+      rOther.bit_encoder_.reset();
+    }
+  }
+
  private:
   // Internal helper class to encode bits to a bit buffer.
   class BitEncoder {
@@ -104,7 +120,6 @@ class EncoderBuffer {
       return static_cast<uint32_t>(bits::MostSignificantBit(x));
     }
 
-   private:
     void PutBit(uint8_t value) {
       const int byte_size = 8;
       const uint64_t off = static_cast<uint64_t>(bit_offset_);

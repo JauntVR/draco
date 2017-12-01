@@ -91,6 +91,28 @@ class MeshEdgeBreakerTraversalEncoder {
 
   const EncoderBuffer &buffer() const { return traversal_buffer_; }
 
+  void CopyTo(MeshEdgeBreakerTraversalEncoder& rOther) {
+    rOther.start_face_encoder_ = start_face_encoder_;
+    traversal_buffer_.CopyTo(rOther.traversal_buffer_);
+    rOther.encoder_impl_ = encoder_impl_;
+    rOther.symbols_ = symbols_;
+    rOther.num_attribute_data_ = num_attribute_data_;
+    if (num_attribute_data_ > 0) {
+      rOther.attribute_connectivity_encoders_ = std::unique_ptr<BinaryEncoder[]>(
+        new BinaryEncoder[num_attribute_data_]);
+      for (int i = 0; i < num_attribute_data_; ++i) {
+        rOther.attribute_connectivity_encoders_[i] = attribute_connectivity_encoders_[i];
+      }
+    }
+  }
+
+  std::unique_ptr<MeshEdgeBreakerTraversalEncoder> Clone() {
+    auto ret = std::unique_ptr<MeshEdgeBreakerTraversalEncoder>(
+        new MeshEdgeBreakerTraversalEncoder());
+    CopyTo(*ret);
+    return std::move(ret);
+  }
+
  protected:
   void EncodeTraversalSymbols() {
     // Bit encode the collected symbols.

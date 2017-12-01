@@ -34,12 +34,32 @@ class PSY_DRACO_API IProfilerManager
 {
 public:
     virtual std::shared_ptr<IProfiler> CreateProfilerSection(const char* pName) = 0;
+    virtual ~IProfilerManager() {}
 };
 
 namespace psy
 {
-    PSY_DRACO_API IProfilerManager* GetProfilerManager();
-    PSY_DRACO_API void SetProfilerManager(IProfilerManager*);
+
+PSY_DRACO_API IProfilerManager* GetProfilerManager();
+PSY_DRACO_API void SetProfilerManager(IProfilerManager*);
+
+namespace draco
+{
+
+enum PSY_DRACO_API MeshType : uint8_t
+{
+    FULL_MESH = 0,
+    INCREMENTAL_MESH = 1
+};
+
+struct PSY_DRACO_API Header
+{
+    uint8_t mMajorVersion;
+    uint8_t mMinorVersion;
+    MeshType mMeshType;
+};
+
+}; // namespace draco
 }; // namespace psy
 
 #ifndef PSY_DRACO_PROFILE_ENABLE

@@ -44,11 +44,44 @@ MeshEdgeBreakerEncoderImpl<TraversalEncoder>::MeshEdgeBreakerEncoderImpl()
       use_single_connectivity_(false) {}
 
 template <class TraversalEncoder>
+std::unique_ptr<MeshEdgeBreakerEncoderImplInterface>
+MeshEdgeBreakerEncoderImpl<TraversalEncoder>::Clone()
+{
+  auto impl = std::unique_ptr<MeshEdgeBreakerEncoderImplInterface>(
+        new MeshEdgeBreakerEncoderImpl<TraversalEncoder>());
+  auto ptr = (MeshEdgeBreakerEncoderImpl<TraversalEncoder>*)impl.get();
+  ptr->encoder_ = encoder_;
+  ptr->mesh_ = mesh_;
+  ptr->corner_table_ = std::move(corner_table_->Clone());
+  ptr->corner_traversal_stack_ = corner_traversal_stack_;
+  ptr->visited_faces_ = visited_faces_;
+  ptr->pos_encoding_data_ = pos_encoding_data_;
+  ptr->pos_traversal_method_ = pos_traversal_method_;
+  ptr->processed_connectivity_corners_ = processed_connectivity_corners_;
+  ptr->visited_vertex_ids_ = visited_vertex_ids_;
+  ptr->vertex_traversal_length_ = vertex_traversal_length_;
+  ptr->topology_split_event_data_ = topology_split_event_data_;
+  ptr->face_to_split_symbol_map_ = face_to_split_symbol_map_;
+  ptr->visited_holes_ = visited_holes_;
+  ptr->vertex_hole_id_ = vertex_hole_id_;
+  ptr->last_encoded_symbol_id_ = last_encoded_symbol_id_;
+  ptr->num_split_symbols_ = num_split_symbols_;
+  ptr->attribute_data_ = attribute_data_;
+  ptr->attribute_encoder_to_data_id_map_ = attribute_encoder_to_data_id_map_;
+  traversal_encoder_.CopyTo(ptr->traversal_encoder_);
+  ptr->use_single_connectivity_ = use_single_connectivity_;
+  return std::move(impl);
+}
+
+template <class TraversalEncoder>
 bool MeshEdgeBreakerEncoderImpl<TraversalEncoder>::Init(
     MeshEdgeBreakerEncoder *encoder) {
   encoder_ = encoder;
   mesh_ = encoder->mesh();
   attribute_encoder_to_data_id_map_.clear();
+  if (encoder->GetCornerTable()) {
+    traversal_encoder_.Init(this);
+  }
 
   if (encoder_->options()->IsGlobalOptionSet("split_mesh_on_seams")) {
     use_single_connectivity_ =
