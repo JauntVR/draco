@@ -41,12 +41,15 @@ public:
     */
     MeshCompression(int compressionLevel = 7,
                     int vertexPositionQuantizationBitsCount = 10,
-                    bool hasVisibilityInfo = false);
+                    bool hasVisibilityInfo = false,
+                    bool hasVerttexColorInfo = false);
     ~MeshCompression();
 
     void SetVertexPositionQuantizationBitsCount(const int);
 
     bool IsVisiblityInfoCompressing() const;
+
+    bool IsVertexColorInfoCompressing() const;
 
     eStatus Run(const float* pVertices,
                 const size_t vertexStride,
@@ -54,6 +57,7 @@ public:
                 const unsigned int* pIndices,
                 const size_t indicesCount,
                 const unsigned char* pVisibilityAttributes,
+                const unsigned char* pVertexColorAttributes,
                 const MeshType meshType = MeshType::FULL_MESH);
 
     const char* GetCompressedData() const;
@@ -63,8 +67,8 @@ public:
 
 private:
     /* MeshCompression is non-copyable */
-    MeshCompression(const MeshCompression&) {};
-    MeshCompression& operator=(const MeshCompression&) { return *this; };
+    MeshCompression(const MeshCompression&);
+    MeshCompression& operator=(const MeshCompression&);
 
     class Impl;
     Impl* mpImpl;
