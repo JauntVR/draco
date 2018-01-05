@@ -151,10 +151,41 @@ public:
         }
     }
 
+    const ::draco::PointAttribute* GetPointAttributeByType(const ::draco::GeometryAttribute::Type type) const
+    {
+        const int vis_att_id = mpMesh->GetNamedAttributeId(type);
+        if (vis_att_id >= 0)
+        {
+            return mpMesh->attribute(vis_att_id);
+        }
+        return nullptr;
+    }
+
+    const ::draco::PointAttribute* GetVisibilityAttribute() const
+    {
+        return GetPointAttributeByType(::draco::GeometryAttribute::GENERIC);
+    }
+
+    const ::draco::PointAttribute* GetVertexColorAttribute() const
+    {
+        return GetPointAttributeByType(::draco::GeometryAttribute::COLOR);
+    }
+
+    bool HasVisibilityInfo() const
+    {
+        return (nullptr != GetVisibilityAttribute());
+    }
+
+    bool HasVertexColorInfo() const
+    {
+        return (nullptr != GetVertexColorAttribute());
+    }
+
     void GetMesh(float* pVertices,
                  const size_t vertexStride,
                  unsigned int* pIndices,
-                 unsigned char* pVisibilityAttributes) const
+                 unsigned char* pVisibilityAttributes,
+                 unsigned char* pVertexColorAttributes) const
     {
         // update faces
         {
@@ -171,22 +202,27 @@ public:
 
         // update vertices
         {
-            const int pos_att_id = mpMesh->GetNamedAttributeId(::draco::GeometryAttribute::POSITION);
-            assert(pos_att_id >= 0);
-            UpdateGeometryAttributeValues(mpMesh->attribute(pos_att_id),
+            UpdateGeometryAttributeValues(GetPointAttributeByType(::draco::GeometryAttribute::POSITION),
                                           reinterpret_cast<uint8_t*>(pVertices),
                                           vertexStride,
                                           mpMesh->num_points());
         }
 
         // update visibility attribute
-        if (nullptr != pVisibilityAttributes)
+        if (nullptr != pVisibilityAttributes && HasVisibilityInfo())
         {
-            const int vis_att_id = mpMesh->GetNamedAttributeId(::draco::GeometryAttribute::GENERIC);
-            assert(vis_att_id >= 0);
-            UpdateGeometryAttributeValues(mpMesh->attribute(vis_att_id),
+            UpdateGeometryAttributeValues(GetVisibilityAttribute(),
                                           pVisibilityAttributes,
                                           sizeof(uint8_t),
+                                          mpMesh->num_points());
+        }
+
+        // update visibility attribute
+        if (nullptr != pVertexColorAttributes && HasVertexColorInfo())
+        {
+            UpdateGeometryAttributeValues(GetVertexColorAttribute(),
+                                          pVertexColorAttributes,
+                                          sizeof(uint8_t) * 3,
                                           mpMesh->num_points());
         }
     }
@@ -197,6 +233,9 @@ public:
     std::unique_ptr<MeshEdgeBreakerDecompression> mpMeshDecompression;
     ::draco::Status mStatus;
 };
+
+MeshDecompression::MeshDecompression(const MeshDecompression&) : mpImpl(nullptr) {};
+MeshDecompression& MeshDecompression::operator=(const MeshDecompression&) { return *this; };
 
 MeshDecompression:: MeshDecompression()
 {
@@ -221,14 +260,16 @@ MeshDecompression::eStatus MeshDecompression::Run(const char* pCompressedData,
 void MeshDecompression::GetMesh(float* pVertices,
                                 const size_t vertexStride,
                                 unsigned int* pIndices,
-                                unsigned char* pVisibilityAttributes) const
+                                unsigned char* pVisibilityAttributes,
+                                unsigned char* pVertexColorAttributes) const
 {
     if (mpImpl->mStatus.ok())
     {
         mpImpl->GetMesh(pVertices,
                         vertexStride,
                         pIndices,
-                        pVisibilityAttributes);
+                        pVisibilityAttributes,
+                        pVertexColorAttributes);
     }
 }
 
@@ -257,6 +298,24 @@ size_t MeshDecompression::GetFacesCount() const
         return static_cast<size_t>(mpImpl->mpMesh->num_faces());
     }
     return 0;
+}
+
+bool MeshDecompression::HasVisibilityInfo() const
+{
+    if (mpImpl->mStatus.ok())
+    {
+        return mpImpl->HasVisibilityInfo();
+    }
+    return false;
+}
+
+bool MeshDecompression::HasVertexColorInfo() const
+{
+    if (mpImpl->mStatus.ok())
+    {
+        return mpImpl->HasVertexColorInfo();
+    }
+    return false;
 }
 
 const char* MeshDecompression::GetLastErrorMessage() const

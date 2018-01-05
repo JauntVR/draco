@@ -52,6 +52,15 @@ enum PSY_DRACO_API MeshType : uint8_t
     INCREMENTAL_MESH = 1
 };
 
+/*
+ * change logs
+ * - 1.0: support incremental mesh compression
+ * - 1.1: 2018/01/05 (*)
+ *     + support vertex color compression
+ */
+#define PSY_DRACO_API_MAJOR_VERSION 1
+#define PSY_DRACO_API_MINOR_VERSION 1
+
 struct PSY_DRACO_API Header
 {
     uint8_t mMajorVersion;

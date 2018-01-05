@@ -117,11 +117,14 @@ class MeshCompression::Impl
 public:
     Impl(int compressionLevel,
          int vertexPositionQuantizationBitsCount,
-         bool hasVisibilityInfo) :
+         bool hasVisibilityInfo,
+         bool hasVertexColorInfo) :
         mCompressionLevel(compressionLevel),
         mVertexPositionQuantizationBitsCount(vertexPositionQuantizationBitsCount),
         mHasVisibilityInfo(hasVisibilityInfo),
+        mHasVertexColorInfo(hasVertexColorInfo),
         mPositionAttributeId(0),
+        mVertexColorAttributeId(-1),
         mVisibilityAttributeId(-1)
     {
         mCompressionLevel = std::max(0, std::min(MAX_COMPRESSION_LEVEL, mCompressionLevel));
@@ -145,6 +148,16 @@ public:
                 vis_attrib.Init(::draco::GeometryAttribute::GENERIC,
                     nullptr, 1, ::draco::DT_UINT8, false, sizeof(uint8_t), 0);
                 mVisibilityAttributeId = mpMesh->AddAttribute(vis_attrib, true, 0);
+
+                num_attribs++;
+            }
+
+            if (mHasVertexColorInfo)
+            {
+                ::draco::GeometryAttribute vertex_color_attrib;
+                vertex_color_attrib.Init(::draco::GeometryAttribute::COLOR,
+                    nullptr, 3, ::draco::DT_UINT8, false, sizeof(uint8_t) * 3, 0);
+                mVertexColorAttributeId = mpMesh->AddAttribute(vertex_color_attrib, true, 0);
 
                 num_attribs++;
             }
@@ -205,6 +218,7 @@ public:
                                  const unsigned int* pIndices,
                                  const size_t indicesCount,
                                  const unsigned char* pVisibilityAttributes,
+                                 const unsigned char* pVertexColorAttributes,
                                  const MeshType meshType)
     {
         PSY_DRACO_PROFILE_SECTION("MeshCompression::Impl::Run");
@@ -216,8 +230,8 @@ public:
 
         // encode header
         {
-            mHeader.mMajorVersion = 1;
-            mHeader.mMinorVersion = 0;
+            mHeader.mMajorVersion = PSY_DRACO_API_MAJOR_VERSION;
+            mHeader.mMinorVersion = PSY_DRACO_API_MINOR_VERSION;
             mHeader.mMeshType = meshType;
             if (!mpBuffer->Encode(&mHeader, sizeof(mHeader)))
             {
@@ -266,6 +280,16 @@ public:
                                               verticesCount,
                                               mpMesh->attribute(mVisibilityAttributeId));
             }
+
+            // update vertex color info
+            if (mVertexColorAttributeId >= 0)
+            {
+                assert(nullptr != pVertexColorAttributes);
+                UpdateGeometryAttributeValues(pVertexColorAttributes,
+                                              sizeof(uint8_t) * 3,
+                                              verticesCount,
+                                              mpMesh->attribute(mVertexColorAttributeId));
+            }
         }
 
         // run compression
@@ -285,8 +309,10 @@ public:
     int mCompressionLevel;
     int mVertexPositionQuantizationBitsCount;
     bool mHasVisibilityInfo;
+    bool mHasVertexColorInfo;
 
     int mPositionAttributeId;
+    int mVertexColorAttributeId;
     int mVisibilityAttributeId;
 
     Header mHeader;
@@ -297,11 +323,15 @@ public:
     ::draco::Status mStatus;
 }; // MeshCompression::Impl
 
+MeshCompression::MeshCompression(const MeshCompression&) : mpImpl(nullptr) {}
+MeshCompression& MeshCompression::operator=(const MeshCompression&) { return *this; }
+
 MeshCompression::MeshCompression(int compressionLevel,
                                  int vertexPositionQuantizationBitsCount,
-                                 bool hasVisibilityInfo)
+                                 bool hasVisibilityInfo,
+                                 bool hasVertexColorInfo)
 {
-    mpImpl = new Impl(compressionLevel, vertexPositionQuantizationBitsCount, hasVisibilityInfo);
+    mpImpl = new Impl(compressionLevel, vertexPositionQuantizationBitsCount, hasVisibilityInfo, hasVertexColorInfo);
 }
 
 MeshCompression::~MeshCompression()
@@ -318,6 +348,11 @@ bool MeshCompression::IsVisiblityInfoCompressing() const
     return mpImpl->mHasVisibilityInfo;
 }
 
+bool MeshCompression::IsVertexColorInfoCompressing() const
+{
+    return mpImpl->mHasVertexColorInfo;
+}
+
 void MeshCompression::SetVertexPositionQuantizationBitsCount(const int vertexPositionQuantizationBitsCount)
 {
     mpImpl->SetVertexPositionQuantizationBitsCount(vertexPositionQuantizationBitsCount);
@@ -329,6 +364,7 @@ MeshCompression::eStatus MeshCompression::Run(const float* pVertices,
                                               const unsigned int* pIndices,
                                               const size_t indicesCount,
                                               const unsigned char* pVisibilityAttributes,
+                                              const unsigned char* pVertexColorAttributes,
                                               const MeshType meshType)
 {
     return mpImpl->Run(pVertices,
@@ -337,6 +373,7 @@ MeshCompression::eStatus MeshCompression::Run(const float* pVertices,
                        pIndices,
                        indicesCount,
                        pVisibilityAttributes,
+                       pVertexColorAttributes,
                        meshType);
 }
 
