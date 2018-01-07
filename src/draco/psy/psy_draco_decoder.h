@@ -37,17 +37,20 @@ public:
     const Header* GetDecompressedHeader() const;
     size_t GetVerticesCount() const;
     size_t GetFacesCount() const;
+    bool HasVisibilityInfo() const;
+    bool HasVertexColorInfo() const;
     void GetMesh(float* pVertices,
                  const size_t vertexStride,
                  unsigned int* pIndices,
-                 unsigned char* pVisibilityAttributes) const;
+                 unsigned char* pVisibilityAttributes,
+                 unsigned char* pVertexColorAttributes) const;
 
     const char* GetLastErrorMessage() const;
 
 private:
     /* MeshCompression is non-copyable */
-    MeshDecompression(const MeshDecompression&) {};
-    MeshDecompression& operator=(const MeshDecompression&) { return *this; };
+    MeshDecompression(const MeshDecompression&);
+    MeshDecompression& operator=(const MeshDecompression&);
 
     class Impl;
     Impl* mpImpl;
