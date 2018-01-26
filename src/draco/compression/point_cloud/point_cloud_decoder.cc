@@ -16,6 +16,8 @@
 
 #include "draco/metadata/metadata_decoder.h"
 
+#include "draco/psy/psy_draco.h"
+
 namespace draco {
 
 PointCloudDecoder::PointCloudDecoder()
@@ -96,6 +98,7 @@ Status PointCloudDecoder::Decode(const DecoderOptions &options,
 }
 
 bool PointCloudDecoder::DecodePointAttributes() {
+  PSY_DRACO_PROFILE_SECTION("DecodePointAttributes");
   uint8_t num_attributes_decoders;
   if (!buffer_->Decode(&num_attributes_decoders))
     return false;

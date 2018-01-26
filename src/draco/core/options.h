@@ -18,6 +18,21 @@
 #include <cstdlib>
 #include <map>
 #include <string>
+#include <sstream>
+
+#if ANDROID
+namespace std {
+
+template <typename T>
+std::string to_string(T value)
+{
+    std::ostringstream os;
+    os << value;
+    return os.str();
+}
+
+}
+#endif
 
 namespace draco {
 

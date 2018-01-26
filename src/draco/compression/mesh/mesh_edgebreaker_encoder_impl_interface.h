@@ -50,6 +50,8 @@ class MeshEdgeBreakerEncoderImplInterface {
   virtual bool IsFaceEncoded(FaceIndex fi) const = 0;
 
   virtual MeshEdgeBreakerEncoder *GetEncoder() const = 0;
+
+  virtual std::unique_ptr<MeshEdgeBreakerEncoderImplInterface> Clone() = 0;
 };
 
 }  // namespace draco

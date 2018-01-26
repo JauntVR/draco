@@ -55,6 +55,8 @@ class MeshEdgeBreakerEncoderImpl : public MeshEdgeBreakerEncoderImplInterface {
   }
   MeshEdgeBreakerEncoder *GetEncoder() const override { return encoder_; }
 
+  std::unique_ptr<MeshEdgeBreakerEncoderImplInterface> Clone() override;
+
  private:
   // Initializes data needed for encoding non-position attributes.
   // Returns false on error.

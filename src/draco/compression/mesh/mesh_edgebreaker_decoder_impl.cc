@@ -26,6 +26,8 @@
 #include "draco/mesh/edgebreaker_traverser.h"
 #include "draco/mesh/prediction_degree_traverser.h"
 
+#include "draco/psy/psy_draco.h"
+
 namespace draco {
 
 // Types of "free" edges that are used during topology decoding.
@@ -43,17 +45,53 @@ namespace draco {
 
 template <class TraversalDecoder>
 MeshEdgeBreakerDecoderImpl<TraversalDecoder>::MeshEdgeBreakerDecoderImpl()
-    : decoder_(nullptr),
-      last_symbol_id_(-1),
-      last_vert_id_(-1),
-      last_face_id_(-1),
-      num_new_vertices_(0),
-      num_encoded_vertices_(0) {}
+  : decoder_(nullptr),
+    last_symbol_id_(-1),
+    last_vert_id_(-1),
+    last_face_id_(-1),
+    num_new_vertices_(0),
+    num_encoded_vertices_(0) {}
+
+template <class TraversalDecoder>
+std::unique_ptr<MeshEdgeBreakerDecoderImplInterface>
+MeshEdgeBreakerDecoderImpl<TraversalDecoder>::Clone()
+{
+  auto impl = std::unique_ptr<MeshEdgeBreakerDecoderImplInterface>(
+        new MeshEdgeBreakerDecoderImpl<TraversalDecoder>());
+  auto ptr = (MeshEdgeBreakerDecoderImpl<TraversalDecoder>*)impl.get();
+  ptr->decoder_ = decoder_;
+  ptr->corner_table_ = std::move(corner_table_->Clone());
+  ptr->corner_traversal_stack_ = corner_traversal_stack_;
+  ptr->vertex_traversal_length_ = vertex_traversal_length_;
+  ptr->topology_split_data_ = topology_split_data_;
+  ptr->hole_event_data_ = hole_event_data_;
+  ptr->init_face_configurations_ = init_face_configurations_;
+  ptr->init_corners_ = init_corners_;
+  ptr->vertex_id_map_ = vertex_id_map_;
+  ptr->last_symbol_id_ = last_symbol_id_;
+  ptr->last_vert_id_ = last_vert_id_;
+  ptr->last_face_id_ = last_face_id_;
+  ptr->visited_faces_ = visited_faces_;
+  ptr->visited_verts_ = visited_verts_;
+  ptr->is_vert_hole_ = is_vert_hole_;
+  ptr->num_new_vertices_ = num_new_vertices_;
+  ptr->new_to_parent_vertex_map_ = new_to_parent_vertex_map_;
+  ptr->num_encoded_vertices_ = num_encoded_vertices_;
+  ptr->processed_corner_ids_ = processed_corner_ids_;
+  ptr->processed_connectivity_corners_ = processed_connectivity_corners_;
+  ptr->pos_encoding_data_ = pos_encoding_data_;
+  ptr->attribute_data_ = attribute_data_;
+  traversal_decoder_.CopyTo(ptr->traversal_decoder_);
+  return std::move(impl);
+}
 
 template <class TraversalDecoder>
 bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::Init(
     MeshEdgeBreakerDecoder *decoder) {
   decoder_ = decoder;
+  if (decoder->GetCornerTable()) {
+    traversal_decoder_.Init(this);
+  }
   return true;
 }
 
@@ -217,6 +255,7 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::CreateAttributesDecoder(
 
 template <class TraversalDecoder>
 bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
+  PSY_DRACO_PROFILE_SECTION("DecodeConnectivity");
   num_new_vertices_ = 0;
   new_to_parent_vertex_map_.clear();
 #ifdef DRACO_BACKWARDS_COMPATIBILITY_SUPPORTED
@@ -349,6 +388,7 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
         decoder_->buffer()->remaining_size() - encoded_connectivity_size,
         decoder_->buffer()->bitstream_version());
     // Decode hole and topology split events.
+    PSY_DRACO_PROFILE_SECTION("DecodeHoleAndTopologySplitEvents");
     topology_split_decoded_bytes =
         DecodeHoleAndTopologySplitEvents(&event_buffer);
     if (topology_split_decoded_bytes == -1)
@@ -356,9 +396,6 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
   } else
 #endif
   {
-    if (DecodeHoleAndTopologySplitEvents(decoder_->buffer()) == -1)
-      return false;
-  }
 
   traversal_decoder_.Init(this);
   // Add one extra vertex for each split symbol.
@@ -370,9 +407,12 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
   if (!traversal_decoder_.Start(&traversal_end_buffer))
     return false;
 
-  const int num_connectivity_verts = DecodeConnectivity(num_encoded_symbols);
-  if (num_connectivity_verts == -1)
-    return false;
+  {
+    PSY_DRACO_PROFILE_SECTION("DecodeConnectivity from symbols");
+    const int num_connectivity_verts = DecodeConnectivity(num_encoded_symbols);
+    if (num_connectivity_verts == -1)
+      return false;
+  }
 
   // Set the main buffer to the end of the traversal.
   decoder_->buffer()->Init(traversal_end_buffer.data_head(),

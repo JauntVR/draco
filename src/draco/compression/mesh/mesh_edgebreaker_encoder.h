@@ -49,6 +49,9 @@ class MeshEdgeBreakerEncoder : public MeshEncoder {
     return MESH_EDGEBREAKER_ENCODING;
   }
 
+  std::unique_ptr<MeshEdgeBreakerEncoderImplInterface> CloneEncoderImplState();
+  void SetEncoderImplState(MeshEdgeBreakerEncoderImplInterface& rEncoderState);
+
  protected:
   bool InitializeEncoder() override;
   bool EncodeConnectivity() override;

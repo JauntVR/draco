@@ -19,6 +19,8 @@
 #include "draco/core/symbol_encoding.h"
 #include "draco/core/varint_encoding.h"
 
+#include "draco/psy/psy_draco.h"
+
 namespace draco {
 
 // Predictive encoder for the Edgebreaker symbols based on valences of the
@@ -43,11 +45,19 @@ class MeshEdgeBreakerTraversalValenceEncoder
         max_valence_(7) {}
 
   bool Init(MeshEdgeBreakerEncoderImplInterface *encoder) {
+
+    // psy_draco.h
+    PSY_DRACO_PROFILE_SECTION("MeshEdgeBreakerEncoderImplInterface::Init");
+
     if (!MeshEdgeBreakerTraversalEncoder::Init(encoder))
       return false;
+
+    corner_table_ = encoder->GetCornerTable();
+    if (vertex_valences_.size() == corner_table_->num_vertices()) {
+      return true;
+    }
     min_valence_ = 2;
     max_valence_ = 7;
-    corner_table_ = encoder->GetCornerTable();
 
     // Initialize valences of all vertices.
     vertex_valences_.resize(corner_table_->num_vertices());
@@ -196,6 +206,25 @@ class MeshEdgeBreakerTraversalValenceEncoder
   }
 
   int NumEncodedSymbols() const { return num_symbols_; }
+
+  void CopyTo(MeshEdgeBreakerTraversalValenceEncoder& rOther) {
+    MeshEdgeBreakerTraversalEncoder::CopyTo(*((MeshEdgeBreakerTraversalEncoder*)&rOther));
+    rOther.corner_table_ = corner_table_;
+    rOther.corner_to_vertex_map_ = corner_to_vertex_map_;
+    rOther.vertex_valences_ = vertex_valences_;
+    rOther.prev_symbol_ = prev_symbol_;
+    rOther.num_symbols_ = num_symbols_;
+    rOther.min_valence_ = min_valence_;
+    rOther.max_valence_ = max_valence_;
+    rOther.context_symbols_ = context_symbols_;
+  }
+
+  std::unique_ptr<MeshEdgeBreakerTraversalValenceEncoder> Clone() {
+    auto ret = std::unique_ptr<MeshEdgeBreakerTraversalValenceEncoder>(
+        new MeshEdgeBreakerTraversalValenceEncoder());
+    CopyTo(*ret);
+    return std::move(ret);
+  }
 
  private:
   const CornerTable *corner_table_;

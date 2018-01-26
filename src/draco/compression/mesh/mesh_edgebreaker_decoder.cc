@@ -21,6 +21,25 @@ namespace draco {
 
 MeshEdgeBreakerDecoder::MeshEdgeBreakerDecoder() {}
 
+std::unique_ptr<MeshEdgeBreakerDecoderImplInterface>
+MeshEdgeBreakerDecoder::CloneDecoderImplState() {
+  if (impl_) {
+    return impl_->Clone();
+  }
+  return nullptr;
+}
+
+void MeshEdgeBreakerDecoder::SetDecoderImplState(
+  MeshEdgeBreakerDecoderImplInterface& rDecoderState) {
+  if (impl_) {
+      impl_.reset();
+  }
+  impl_ = std::move(rDecoderState.Clone());
+  if (impl_) {
+    impl_->Init(this);
+  }
+}
+
 bool MeshEdgeBreakerDecoder::CreateAttributesDecoder(int32_t att_decoder_id) {
   return impl_->CreateAttributesDecoder(att_decoder_id);
 }

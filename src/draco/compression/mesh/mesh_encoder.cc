@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 #include "draco/compression/mesh/mesh_encoder.h"
-
 namespace draco {
 
 MeshEncoder::MeshEncoder() : mesh_(nullptr) {}

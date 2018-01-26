@@ -127,6 +127,29 @@ class MeshEdgeBreakerTraversalDecoder {
     }
   }
 
+  void CopyTo(MeshEdgeBreakerTraversalDecoder& rOther) {
+    rOther.buffer_ = buffer_;
+    rOther.symbol_buffer_ = symbol_buffer_;
+    rOther.start_face_decoder_ = start_face_decoder_;
+    rOther.start_face_buffer_ = start_face_buffer_;
+    rOther.num_attribute_data_ = num_attribute_data_;
+    if (num_attribute_data_ > 0) {
+      rOther.attribute_connectivity_decoders_ = std::unique_ptr<BinaryDecoder[]>(
+        new BinaryDecoder[num_attribute_data_]);
+      for (int i = 0; i < num_attribute_data_; ++i) {
+        rOther.attribute_connectivity_decoders_[i] = attribute_connectivity_decoders_[i];
+      }
+    }
+    rOther.decoder_impl_ = decoder_impl_;
+  }
+
+  std::unique_ptr<MeshEdgeBreakerTraversalDecoder> Clone() {
+    auto ret = std::unique_ptr<MeshEdgeBreakerTraversalDecoder>(
+        new MeshEdgeBreakerTraversalDecoder());
+    CopyTo(*ret);
+    return std::move(ret);
+  }
+
  protected:
   DecoderBuffer *buffer() { return &buffer_; }
 
