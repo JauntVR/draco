@@ -299,11 +299,11 @@ bool MeshEdgeBreakerEncoderImpl<TraversalEncoder>::EncodeConnectivity() {
   // together, unless the option |use_single_connectivity_| is set in which case
   // we break the mesh along attribute seams and use the same connectivity for
   // all attributes.
-  PSY_DRACO_PROFILE_SECTION("CreateCornerTable");
   if (use_single_connectivity_) {
     PSY_DRACO_PROFILE_SECTION("CreateCornerTableFromAllAttributes");
     corner_table_ = CreateCornerTableFromAllAttributes(mesh_);
   } else {
+	PSY_DRACO_PROFILE_SECTION("CreateCornerTable");
     corner_table_ = CreateCornerTableFromPositionAttribute(mesh_);
   }
   if (corner_table_ == nullptr) {

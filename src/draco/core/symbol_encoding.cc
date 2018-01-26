@@ -150,6 +150,7 @@ bool EncodeSymbols(const uint32_t *symbols, int num_values, int num_components,
       method = SYMBOL_CODING_RAW;
     }
   }
+
   // Use the tagged scheme.
   target_buffer->Encode(static_cast<uint8_t>(method));
   if (method == SYMBOL_CODING_TAGGED) {

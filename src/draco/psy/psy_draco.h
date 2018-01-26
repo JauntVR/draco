@@ -65,7 +65,9 @@ struct PSY_DRACO_API Header
 {
     uint8_t mMajorVersion;
     uint8_t mMinorVersion;
+	float mDecodeMultiplier;
     MeshType mMeshType;
+	uint32_t mIFrameIndex;
 };
 
 }; // namespace draco
