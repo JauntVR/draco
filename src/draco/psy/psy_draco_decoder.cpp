@@ -101,17 +101,17 @@ public:
         // decode header
         DecodeHeader();
 
-		if (MeshType::FULL_MESH == mDecompressedHeader.mMeshType)
-		{
-			mCurrIFrameIndex = mDecompressedHeader.mIFrameIndex;
-		}
-		const bool is_incremental_decompression = (mDecompressedHeader.mMeshType == MeshType::INCREMENTAL_MESH);
+        if (MeshType::FULL_MESH == mDecompressedHeader.mMeshType)
+        {
+            mCurrIFrameIndex = mDecompressedHeader.mIFrameIndex;
+        }
+        const bool is_incremental_decompression = (mDecompressedHeader.mMeshType == MeshType::INCREMENTAL_MESH);
 
-		if (is_incremental_decompression && (mCurrIFrameIndex != mDecompressedHeader.mIFrameIndex))
-		{
-			mStatus = ::draco::Status(::draco::Status::Code::ERROR, "Mismatch of I Frames, cannot decode incremental Frame");
-			return eStatus::FAILED;
-		}
+        if (is_incremental_decompression && (mCurrIFrameIndex != mDecompressedHeader.mIFrameIndex))
+        {
+            mStatus = ::draco::Status(::draco::Status::Code::ERROR, "Mismatch of I Frames, cannot decode incremental Frame");
+            return eStatus::FAILED;
+        }
 
         if (pDecodeMultipler)
         {
@@ -249,17 +249,11 @@ public:
     }
 
     Header mDecompressedHeader;
-	uint32_t mCurrIFrameIndex;
+    uint32_t mCurrIFrameIndex;
     std::shared_ptr<::draco::Mesh> mpMesh;
     std::shared_ptr<::draco::DecoderBuffer> mpBuffer;
     std::unique_ptr<MeshEdgeBreakerDecompression> mpMeshDecompression;
     ::draco::Status mStatus;
-};
-
-MeshDecompression::MeshDecompression(const MeshDecompression&) : mpImpl(nullptr) {};
-MeshDecompression& MeshDecompression::operator=(const MeshDecompression&)
-{
-    return *this;
 };
 
 MeshDecompression:: MeshDecompression()

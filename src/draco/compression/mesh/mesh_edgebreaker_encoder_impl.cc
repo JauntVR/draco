@@ -303,7 +303,7 @@ bool MeshEdgeBreakerEncoderImpl<TraversalEncoder>::EncodeConnectivity() {
     PSY_DRACO_PROFILE_SECTION("CreateCornerTableFromAllAttributes");
     corner_table_ = CreateCornerTableFromAllAttributes(mesh_);
   } else {
-	PSY_DRACO_PROFILE_SECTION("CreateCornerTable");
+    PSY_DRACO_PROFILE_SECTION("CreateCornerTable");
     corner_table_ = CreateCornerTableFromPositionAttribute(mesh_);
   }
   if (corner_table_ == nullptr) {

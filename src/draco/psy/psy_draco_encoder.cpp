@@ -220,9 +220,9 @@ public:
         {
             mHeader.mMajorVersion = PSY_DRACO_API_MAJOR_VERSION;
             mHeader.mMinorVersion = PSY_DRACO_API_MINOR_VERSION;
-			mHeader.mDecodeMultiplier = decodeMultiplier;
-			mHeader.mMeshType = meshType;
-			mHeader.mIFrameIndex = IFrameIndex;
+            mHeader.mDecodeMultiplier = decodeMultiplier;
+            mHeader.mMeshType = meshType;
+            mHeader.mIFrameIndex = IFrameIndex;
 
             if (!mpBuffer->Encode(&mHeader, sizeof(mHeader)))
             {
@@ -367,7 +367,7 @@ MeshCompression::eStatus MeshCompression::Run(const int16_t* pVertices,
                        pVisibilityAttributes,
                        pVertexColorAttributes,
                        meshType,
-	                   IFrameIndex);
+                       IFrameIndex);
 }
 
 const char* MeshCompression::GetCompressedData() const

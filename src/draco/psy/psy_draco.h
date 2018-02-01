@@ -65,9 +65,9 @@ struct PSY_DRACO_API Header
 {
     uint8_t mMajorVersion;
     uint8_t mMinorVersion;
-	float mDecodeMultiplier;
+    float mDecodeMultiplier;
     MeshType mMeshType;
-	uint32_t mIFrameIndex;
+    uint32_t mIFrameIndex;
 };
 
 }; // namespace draco
@@ -78,12 +78,12 @@ struct PSY_DRACO_API Header
 #endif
 
 #if PSY_DRACO_PROFILE_ENABLE
-    #define PSY_DRACO_PROFILE_SECTION(name) \
+#define PSY_DRACO_PROFILE_SECTION(name) \
         IProfilerManager* prof_manager = psy::GetProfilerManager(); \
         std::shared_ptr<IProfiler> psy_draco_prof_section = \
             ((prof_manager) ? (prof_manager->CreateProfilerSection(name)) : (nullptr));
 #else
-    #define PSY_DRACO_PROFILE_SECTION(name)
+#define PSY_DRACO_PROFILE_SECTION(name)
 #endif // PSY_DRACO_PROFILE_ENABLE
 
 #endif // PSY_DRACO_COMMON_H
