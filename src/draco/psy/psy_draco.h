@@ -57,6 +57,7 @@ enum PSY_DRACO_API MeshType : uint8_t
  * - 1.0: support incremental mesh compression
  * - 1.1: 2018/01/05 (*)
  *     + support vertex color compression
+ * - Support I frame index encoding as part of the header
  */
 #define PSY_DRACO_API_MAJOR_VERSION 1
 #define PSY_DRACO_API_MINOR_VERSION 1
