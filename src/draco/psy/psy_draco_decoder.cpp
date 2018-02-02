@@ -39,6 +39,10 @@ protected:
     {
         if (mIsIncrementalDecompression)
         {
+            if (!mpDecoderState)
+            {
+                return false;
+            }
             SetDecoderImplState(*mpDecoderState);
             return true;
         }
@@ -89,13 +93,30 @@ public:
     }
 
     MeshDecompression::eStatus Run(const char* pCompressedData,
-                                   const size_t compressedDataSizeInBytes)
+                                   const size_t compressedDataSizeInBytes,
+                                   float* pDecodeMultipler)
     {
         mpBuffer->Init(pCompressedData, compressedDataSizeInBytes);
 
         // decode header
         DecodeHeader();
+
+        if (MeshType::FULL_MESH == mDecompressedHeader.mMeshType)
+        {
+            mCurrIFrameIndex = mDecompressedHeader.mIFrameIndex;
+        }
         const bool is_incremental_decompression = (mDecompressedHeader.mMeshType == MeshType::INCREMENTAL_MESH);
+
+        if (is_incremental_decompression && (mCurrIFrameIndex != mDecompressedHeader.mIFrameIndex))
+        {
+            mStatus = ::draco::Status(::draco::Status::Code::ERROR, "Mismatch of I Frames, cannot decode incremental Frame");
+            return eStatus::FAILED;
+        }
+
+        if (pDecodeMultipler)
+        {
+            *pDecodeMultipler = mDecompressedHeader.mDecodeMultiplier;
+        }
 
         // reset mesh
         mpMesh->set_num_points(0);
@@ -181,7 +202,7 @@ public:
         return (nullptr != GetVertexColorAttribute());
     }
 
-    void GetMesh(float* pVertices,
+    void GetMesh(int16_t* pVertices,
                  const size_t vertexStride,
                  unsigned int* pIndices,
                  unsigned char* pVisibilityAttributes,
@@ -228,14 +249,12 @@ public:
     }
 
     Header mDecompressedHeader;
+    uint32_t mCurrIFrameIndex;
     std::shared_ptr<::draco::Mesh> mpMesh;
     std::shared_ptr<::draco::DecoderBuffer> mpBuffer;
     std::unique_ptr<MeshEdgeBreakerDecompression> mpMeshDecompression;
     ::draco::Status mStatus;
 };
-
-MeshDecompression::MeshDecompression(const MeshDecompression&) : mpImpl(nullptr) {};
-MeshDecompression& MeshDecompression::operator=(const MeshDecompression&) { return *this; };
 
 MeshDecompression:: MeshDecompression()
 {
@@ -252,12 +271,13 @@ MeshDecompression::~MeshDecompression()
 }
 
 MeshDecompression::eStatus MeshDecompression::Run(const char* pCompressedData,
-                                                  const size_t compressedDataSizeInBytes)
+        const size_t compressedDataSizeInBytes,
+        float* pDecodeMultiplier)
 {
-    return mpImpl->Run(pCompressedData, compressedDataSizeInBytes);
+    return mpImpl->Run(pCompressedData, compressedDataSizeInBytes, pDecodeMultiplier);
 }
 
-void MeshDecompression::GetMesh(float* pVertices,
+void MeshDecompression::GetMesh(int16_t* pVertices,
                                 const size_t vertexStride,
                                 unsigned int* pIndices,
                                 unsigned char* pVisibilityAttributes,

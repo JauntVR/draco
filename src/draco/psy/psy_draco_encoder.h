@@ -39,26 +39,25 @@ public:
     *   + supporting maximum 8 view ports, have been presented by corresponding bits
     *     1 for visible and 0 for invisible
     */
-    MeshCompression(int compressionLevel = 7,
-                    int vertexPositionQuantizationBitsCount = 10,
+    MeshCompression(int compressionLevel,
                     bool hasVisibilityInfo = false,
                     bool hasVerttexColorInfo = false);
     ~MeshCompression();
-
-    void SetVertexPositionQuantizationBitsCount(const int);
 
     bool IsVisiblityInfoCompressing() const;
 
     bool IsVertexColorInfoCompressing() const;
 
-    eStatus Run(const float* pVertices,
+    eStatus Run(const int16_t* pQuantizedVertices,
                 const size_t vertexStride,
                 const size_t verticesCount,
+                const float decodeMultiplier,
                 const unsigned int* pIndices,
                 const size_t indicesCount,
                 const unsigned char* pVisibilityAttributes,
                 const unsigned char* pVertexColorAttributes,
-                const MeshType meshType = MeshType::FULL_MESH);
+                const MeshType meshType,
+                uint32_t IFrameIndex);
 
     const char* GetCompressedData() const;
     size_t GetCompressedDataSizeInBytes() const;

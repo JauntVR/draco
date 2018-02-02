@@ -67,7 +67,6 @@ MeshEdgeBreakerDecoderImpl<TraversalDecoder>::Clone()
   ptr->hole_event_data_ = hole_event_data_;
   ptr->init_face_configurations_ = init_face_configurations_;
   ptr->init_corners_ = init_corners_;
-  ptr->vertex_id_map_ = vertex_id_map_;
   ptr->last_symbol_id_ = last_symbol_id_;
   ptr->last_vert_id_ = last_vert_id_;
   ptr->last_face_id_ = last_face_id_;
@@ -393,10 +392,13 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
         DecodeHoleAndTopologySplitEvents(&event_buffer);
     if (topology_split_decoded_bytes == -1)
       return false;
-  } else
+  }
+  else
 #endif
   {
-
+    if (DecodeHoleAndTopologySplitEvents(decoder_->buffer()) == -1)
+      return false;
+  }
   traversal_decoder_.Init(this);
   // Add one extra vertex for each split symbol.
   traversal_decoder_.SetNumEncodedVertices(num_encoded_vertices_ +
@@ -407,9 +409,10 @@ bool MeshEdgeBreakerDecoderImpl<TraversalDecoder>::DecodeConnectivity() {
   if (!traversal_decoder_.Start(&traversal_end_buffer))
     return false;
 
+  int num_connectivity_verts = 0;
   {
     PSY_DRACO_PROFILE_SECTION("DecodeConnectivity from symbols");
-    const int num_connectivity_verts = DecodeConnectivity(num_encoded_symbols);
+    num_connectivity_verts = DecodeConnectivity(num_encoded_symbols);
     if (num_connectivity_verts == -1)
       return false;
   }

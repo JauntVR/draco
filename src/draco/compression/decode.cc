@@ -15,7 +15,7 @@
 #include "draco/compression/decode.h"
 
 #include "draco/compression/config/compression_shared.h"
-
+#include "point_cloud/point_cloud_decoder.h"
 #ifdef DRACO_MESH_COMPRESSION_SUPPORTED
 #include "draco/compression/mesh/mesh_edgebreaker_decoder.h"
 #include "draco/compression/mesh/mesh_sequential_decoder.h"

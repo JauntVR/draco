@@ -32,14 +32,15 @@ public:
     ~MeshDecompression();
 
     eStatus Run(const char* pCompressedData,
-                const size_t compressedDataSizeInBytes);
+                const size_t compressedDataSizeInBytes,
+                float* pDecodeMultiplier);
 
     const Header* GetDecompressedHeader() const;
     size_t GetVerticesCount() const;
     size_t GetFacesCount() const;
     bool HasVisibilityInfo() const;
     bool HasVertexColorInfo() const;
-    void GetMesh(float* pVertices,
+    void GetMesh(int16_t* pVertices,
                  const size_t vertexStride,
                  unsigned int* pIndices,
                  unsigned char* pVisibilityAttributes,
