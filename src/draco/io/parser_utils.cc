@@ -150,6 +150,8 @@ bool ParseSignedInt(DecoderBuffer *buffer, int32_t *value) {
   uint32_t v;
   if (!ParseUnsignedInt(buffer, &v))
     return false;
+  // HACK HACK HACK - VS2017 compilation of draco is not happy with this (and its usage with unsigned types)
+  #pragma warning( suppress : 4146 )  
   *value = (sign < 0) ? -v : v;
   return true;
 }
