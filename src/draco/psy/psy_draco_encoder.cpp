@@ -151,11 +151,8 @@ public:
 
             if (mHasVertexColorInfo)
             {
-                ::draco::GeometryAttribute vertex_color_attrib;
-                vertex_color_attrib.Init(::draco::GeometryAttribute::COLOR,
-                                         nullptr, 3, ::draco::DT_UINT8, false, sizeof(uint8_t) * 3, 0);
-                mVertexColorAttributeId = mpMesh->AddAttribute(vertex_color_attrib, true, 0);
-
+                // Will be created later based on whether the frame has color information
+                // only I frames will have color information
                 num_attribs++;
             }
 
@@ -273,13 +270,20 @@ public:
             }
 
             // update vertex color info
-            if (mVertexColorAttributeId >= 0)
+            if (pVertexColorAttributes)
             {
-                assert(nullptr != pVertexColorAttributes);
+                ::draco::GeometryAttribute vertex_color_attrib;
+                vertex_color_attrib.Init(::draco::GeometryAttribute::COLOR,
+                                         nullptr, 3, ::draco::DT_UINT8, false, sizeof(uint8_t) * 3, 0);
+                mVertexColorAttributeId = mpMesh->AddAttribute(vertex_color_attrib, true, 0);
                 UpdateGeometryAttributeValues(pVertexColorAttributes,
                                               sizeof(uint8_t) * 3,
                                               verticesCount,
                                               mpMesh->attribute(mVertexColorAttributeId));
+            }
+            else
+            {
+                mpMesh->DeleteAttribute(mVertexColorAttributeId);
             }
         }
 
