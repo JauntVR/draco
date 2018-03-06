@@ -151,8 +151,10 @@ public:
 
             if (mHasVertexColorInfo)
             {
-                // Will be created later based on whether the frame has color information
-                // only I frames will have color information
+                ::draco::GeometryAttribute vertex_color_attrib;
+                vertex_color_attrib.Init(::draco::GeometryAttribute::COLOR,
+                                         nullptr, 3, ::draco::DT_UINT8, false, sizeof(uint8_t) * 3, 0);
+                mVertexColorAttributeId = mpMesh->AddAttribute(vertex_color_attrib, true, 0);
                 num_attribs++;
             }
 
@@ -169,6 +171,17 @@ public:
         mpMesh.reset();
         mpBuffer.reset();
         mpMeshCompression.reset();
+    }
+
+    void ResetGeometryAttributeValues(const size_t verticesCount,
+                                       ::draco::PointAttribute* pPointAttribute)
+    {
+        pPointAttribute->SetIdentityMapping();
+        pPointAttribute->Resize(verticesCount);
+        pPointAttribute->Reset(verticesCount);
+        const auto dst_stride = pPointAttribute->byte_stride();
+        uint8_t* p_dst = pPointAttribute->buffer()->data();
+        memset(p_dst, 0, verticesCount * dst_stride);
     }
 
     void UpdateGeometryAttributeValues(const uint8_t* pValues,
@@ -270,20 +283,20 @@ public:
             }
 
             // update vertex color info
-            if (pVertexColorAttributes)
+            if (mVertexColorAttributeId >= 0)
             {
-                ::draco::GeometryAttribute vertex_color_attrib;
-                vertex_color_attrib.Init(::draco::GeometryAttribute::COLOR,
-                                         nullptr, 3, ::draco::DT_UINT8, false, sizeof(uint8_t) * 3, 0);
-                mVertexColorAttributeId = mpMesh->AddAttribute(vertex_color_attrib, true, 0);
-                UpdateGeometryAttributeValues(pVertexColorAttributes,
-                                              sizeof(uint8_t) * 3,
-                                              verticesCount,
-                                              mpMesh->attribute(mVertexColorAttributeId));
-            }
-            else
-            {
-                mpMesh->DeleteAttribute(mVertexColorAttributeId);
+                if (pVertexColorAttributes)
+                {
+                    UpdateGeometryAttributeValues(pVertexColorAttributes,
+                                                  sizeof(uint8_t) * 3,
+                                                  verticesCount,
+                                                  mpMesh->attribute(mVertexColorAttributeId));
+                }
+                else
+                {
+                    ResetGeometryAttributeValues(verticesCount,
+                                                 mpMesh->attribute(mVertexColorAttributeId));
+                }
             }
         }
 
