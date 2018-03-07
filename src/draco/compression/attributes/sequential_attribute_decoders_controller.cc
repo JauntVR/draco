@@ -17,7 +17,28 @@
 #include "draco/compression/attributes/sequential_quantization_attribute_decoder.h"
 #include "draco/compression/config/compression_shared.h"
 
+#include "draco/psy/psy_draco.h"
+
 namespace draco {
+
+class DecodePortableAttributeJob : public IDracoJob
+{
+public:
+    DecodePortableAttributeJob() : mpDecoder(nullptr), mpPointIds(nullptr) {}
+    DecodePortableAttributeJob(SequentialAttributeDecoder* pDecoder, std::vector<PointIndex>* pPointIds)
+      : mpDecoder(pDecoder), mpPointIds(pPointIds) {
+    }
+
+    bool DoJob() override {
+        if (mpDecoder && mpPointIds) {
+            return mpDecoder->DecodePortableAttribute(*mpPointIds);
+        }
+        return false;
+    }
+
+    SequentialAttributeDecoder* mpDecoder;
+    std::vector<PointIndex>* mpPointIds;
+};
 
 SequentialAttributeDecodersController::SequentialAttributeDecodersController(
     std::unique_ptr<PointsSequencer> sequencer)
@@ -61,12 +82,35 @@ bool SequentialAttributeDecodersController::DecodeAttributes(
 
 bool SequentialAttributeDecodersController::DecodePortableAttributes(
     DecoderBuffer *in_buffer) {
+  PSY_DRACO_PROFILE_SECTION("DecodePortableAttributes()");
   const int32_t num_attributes = GetNumAttributes();
-  for (int i = 0; i < num_attributes; ++i) {
-    if (!sequential_decoders_[i]->DecodePortableAttribute(point_ids_,
-                                                          in_buffer))
+  std::vector<size_t> encoded_blob_sizes(num_attributes, 0);
+  if (!in_buffer->Decode(encoded_blob_sizes.data(), num_attributes * sizeof(size_t))) {
       return false;
   }
+
+  for (int i = 0; i < num_attributes; ++i) {
+      sequential_decoders_[i]->PrepareDecodingPortableAttribute(encoded_blob_sizes[i], in_buffer);
+  }
+
+  if (num_attributes > 1 && psy::GetJobsParallelController()) {
+      auto p_controller = psy::GetJobsParallelController();
+      std::vector<std::shared_ptr<IDracoJob>> jobs(num_attributes);
+      std::vector<IDracoJob*> p_jobs(num_attributes, nullptr);
+      for (uint32_t i = 0; i < num_attributes; ++i) {
+          jobs[i].reset(new DecodePortableAttributeJob(sequential_decoders_[i].get(), &point_ids_));
+          p_jobs[i] = jobs[i].get();
+      }
+      if (!p_controller->RunJobsParallely(p_jobs.data(), num_attributes)) {
+          return false;
+      }
+  } else {
+      for (int i = 0; i < num_attributes; ++i) {
+        if (!sequential_decoders_[i]->DecodePortableAttribute(point_ids_))
+          return false;
+      }
+  }
+
   return true;
 }
 

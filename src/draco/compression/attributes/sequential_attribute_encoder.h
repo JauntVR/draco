@@ -53,6 +53,12 @@ class SequentialAttributeEncoder {
   virtual bool EncodePortableAttribute(const std::vector<PointIndex> &point_ids,
                                        EncoderBuffer *out_buffer);
 
+  // Performs lossless encoding of the transformed attribute data.
+  virtual bool EncodePortableAttribute(const std::vector<PointIndex> &point_ids) {
+      mBuffer.Resize(0);
+      return EncodePortableAttribute(point_ids, &mBuffer);
+  }
+
   // Encodes any data related to the portable attribute transform.
   virtual bool EncodeDataNeededByPortableTransform(EncoderBuffer *out_buffer);
 
@@ -78,6 +84,8 @@ class SequentialAttributeEncoder {
   const PointAttribute *attribute() const { return attribute_; }
   int attribute_id() const { return attribute_id_; }
   PointCloudEncoder *encoder() const { return encoder_; }
+
+  EncoderBuffer mBuffer;
 
  protected:
   // Should be used to initialize newly created prediction scheme.

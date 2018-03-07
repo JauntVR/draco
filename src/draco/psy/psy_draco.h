@@ -37,11 +37,27 @@ public:
     virtual ~IProfilerManager() {}
 };
 
+class PSY_DRACO_API IDracoJob
+{
+public:
+    virtual bool DoJob() = 0;
+    virtual ~IDracoJob() {}
+};
+class PSY_DRACO_API IDracoJobsController
+{
+public:
+    virtual bool RunJobsParallely(IDracoJob** pJobs, const size_t jobsCount) const = 0;
+    virtual ~IDracoJobsController() {}
+};
+
 namespace psy
 {
 
 PSY_DRACO_API IProfilerManager* GetProfilerManager();
 PSY_DRACO_API void SetProfilerManager(IProfilerManager*);
+
+PSY_DRACO_API IDracoJobsController* GetJobsParallelController();
+PSY_DRACO_API void SetJobsParallelController(IDracoJobsController*);
 
 namespace draco
 {
@@ -57,7 +73,10 @@ enum PSY_DRACO_API MeshType : uint8_t
  * - 1.0: support incremental mesh compression
  * - 1.1: 2018/01/05 (*)
  *     + support vertex color compression
- * - Support I frame index encoding as part of the header
+ * - ?.?:
+ *     + support I frame index encoding as part of the header
+ * - 1.2: 2018/02/07
+ *     + support encode/decode attributes parallely
  */
 #define PSY_DRACO_API_MAJOR_VERSION 1
 #define PSY_DRACO_API_MINOR_VERSION 1

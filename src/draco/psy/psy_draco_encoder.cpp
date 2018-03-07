@@ -27,6 +27,20 @@ void SetProfilerManager(IProfilerManager* pProp)
     }
     gmpProfilerManager = pProp;
 } // SetProfilerManager
+
+static IDracoJobsController* gmpJobsParallelController = nullptr;
+IDracoJobsController* GetJobsParallelController()
+{
+    return gmpJobsParallelController;
+} // GetJobsParallelController
+void SetJobsParallelController(IDracoJobsController* pProp)
+{
+    if (gmpJobsParallelController)
+    {
+        delete gmpJobsParallelController;
+    }
+    gmpJobsParallelController = pProp;
+} // SetJobsParallelController
 } // namespace psy
 
 namespace psy

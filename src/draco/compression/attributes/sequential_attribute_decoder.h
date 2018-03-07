@@ -37,6 +37,16 @@ class SequentialAttributeDecoder {
   virtual bool DecodePortableAttribute(const std::vector<PointIndex> &point_ids,
                                        DecoderBuffer *in_buffer);
 
+  virtual void PrepareDecodingPortableAttribute(const size_t data_size, DecoderBuffer *in_buffer) {
+      mBuffer.Init(in_buffer->data_head(), data_size, in_buffer->bitstream_version());
+      in_buffer->Advance(data_size);
+  }
+
+  // Performs lossless decoding of the portable attribute data.
+  virtual bool DecodePortableAttribute(const std::vector<PointIndex> &point_ids) {
+      return DecodePortableAttribute(point_ids, &mBuffer);
+  }
+
   // Decodes any data needed to revert portable transform of the decoded
   // attribute.
   virtual bool DecodeDataNeededByPortableTransform(
@@ -70,6 +80,8 @@ class SequentialAttributeDecoder {
   }
 
   PointAttribute *portable_attribute() { return portable_attribute_.get(); }
+
+  DecoderBuffer mBuffer;
 
  private:
   PointCloudDecoder *decoder_;

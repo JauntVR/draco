@@ -17,7 +17,29 @@
 #include "draco/compression/attributes/sequential_quantization_attribute_encoder.h"
 #include "draco/compression/point_cloud/point_cloud_encoder.h"
 
+
+#include "draco/psy/psy_draco.h"
+
 namespace draco {
+
+class EncodePortableAttributeJob : public IDracoJob
+{
+public:
+    EncodePortableAttributeJob() : mpEncoder(nullptr), mpPointIds(nullptr) {}
+    EncodePortableAttributeJob(SequentialAttributeEncoder* pEncoder, std::vector<PointIndex>* pPointIds)
+      : mpEncoder(pEncoder), mpPointIds(pPointIds) {
+    }
+
+    bool DoJob() override {
+        if (mpEncoder && mpPointIds) {
+            return (mpEncoder->EncodePortableAttribute(*mpPointIds));
+        }
+        return (false);
+    }
+
+    SequentialAttributeEncoder* mpEncoder;
+    std::vector<PointIndex>* mpPointIds;
+};
 
 SequentialAttributeEncodersController::SequentialAttributeEncodersController(
     std::unique_ptr<PointsSequencer> sequencer)
@@ -72,11 +94,39 @@ bool SequentialAttributeEncodersController::
 
 bool SequentialAttributeEncodersController::EncodePortableAttributes(
     EncoderBuffer *out_buffer) {
-  for (uint32_t i = 0; i < sequential_encoders_.size(); ++i) {
-    if (!sequential_encoders_[i]->EncodePortableAttribute(point_ids_,
-                                                          out_buffer))
-      return false;
+  PSY_DRACO_PROFILE_SECTION("EncodePortableAttributes()");
+
+  const auto encoders_count = sequential_encoders_.size();
+
+  if (encoders_count > 1 && psy::GetJobsParallelController()) {
+      auto p_controller = psy::GetJobsParallelController();
+      std::vector<std::shared_ptr<IDracoJob>> jobs(encoders_count);
+      std::vector<IDracoJob*> p_jobs(encoders_count, nullptr);
+      for (uint32_t i = 0; i < encoders_count; ++i) {
+          jobs[i].reset(new EncodePortableAttributeJob(sequential_encoders_[i].get(), &point_ids_));
+          p_jobs[i] = jobs[i].get();
+      }
+      if (!p_controller->RunJobsParallely(p_jobs.data(), encoders_count)) {
+          return false;
+      }
+  } else {
+      for (uint32_t i = 0; i < encoders_count; ++i) {
+          if (!sequential_encoders_[i]->EncodePortableAttribute(point_ids_)) {
+              return false;
+          }
+      }
   }
+
+  for (uint32_t i = 0; i < encoders_count; ++i) {
+      if (!out_buffer->Encode(sequential_encoders_[i]->mBuffer.size())) {
+          return false;
+      }
+  }
+
+  for (uint32_t i = 0; i < encoders_count; ++i) {
+      out_buffer->Encode(sequential_encoders_[i]->mBuffer.data(), sequential_encoders_[i]->mBuffer.size());
+  }
+
   return true;
 }
 
