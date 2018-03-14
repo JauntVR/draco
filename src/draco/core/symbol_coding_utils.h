@@ -41,6 +41,9 @@ typename std::make_unsigned<IntTypeT>::type ConvertSignedIntToSymbol(
   if (val >= 0) {
     return static_cast<UnsignedType>(val) << 1;
   }
+
+  // HACK HACK HACK - VS2017 compilation of draco is not happy with this (and its usage with unsigned types)
+  #pragma warning( suppress : 4146 )  
   val = -(val + 1);  // Map -1 to 0, -2 to -1, etc..
   UnsignedType ret = static_cast<UnsignedType>(val);
   ret <<= 1;
