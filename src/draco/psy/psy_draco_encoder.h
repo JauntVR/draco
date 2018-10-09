@@ -41,12 +41,15 @@ public:
     */
     MeshCompression(int compressionLevel,
                     bool hasVisibilityInfo = false,
-                    bool hasVerttexColorInfo = false);
+                    bool hasVerttexColorInfo = false,
+                    bool hasTexCoordInfo = false);
     ~MeshCompression();
 
     bool IsVisiblityInfoCompressing() const;
 
     bool IsVertexColorInfoCompressing() const;
+
+    bool IsTexCoordInfoCompressing() const;
 
     eStatus Run(const int16_t* pQuantizedVertices,
                 const size_t vertexStride,
@@ -56,6 +59,7 @@ public:
                 const size_t indicesCount,
                 const unsigned char* pVisibilityAttributes,
                 const unsigned char* pVertexColorAttributes,
+                const unsigned char* pTexCoordAttributes,
                 const MeshType meshType,
                 uint32_t IFrameIndex);
 

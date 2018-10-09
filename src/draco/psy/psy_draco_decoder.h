@@ -40,11 +40,13 @@ public:
     size_t GetFacesCount() const;
     bool HasVisibilityInfo() const;
     bool HasVertexColorInfo() const;
+    bool hasTexCoordInfo() const;
     void GetMesh(int16_t* pVertices,
                  const size_t vertexStride,
                  unsigned int* pIndices,
                  unsigned char* pVisibilityAttributes,
-                 unsigned char* pVertexColorAttributes) const;
+                 unsigned char* pVertexColorAttributes,
+                 unsigned char* pTexCoordAttributes) const;
 
     const char* GetLastErrorMessage() const;
 
