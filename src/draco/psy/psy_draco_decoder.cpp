@@ -263,7 +263,7 @@ public:
         {
             UpdateGeometryAttributeValues(GetTexCoordAttribute(),
                                           pTexCoordAttributes,
-                                          sizeof(uint8_t) * 8,
+                                          sizeof(float) * 2,
                                           mpMesh->num_points());
         }
 

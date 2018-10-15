@@ -163,7 +163,7 @@ public:
             if (mHasTexCoordInfo)
             {
                 ::draco::GeometryAttribute tex_coord_attrib;
-                tex_coord_attrib.Init(::draco::GeometryAttribute::TEX_COORD, nullptr, 3, ::draco::DT_UINT8, false, sizeof(uint8_t) * 3, 0);
+                tex_coord_attrib.Init(::draco::GeometryAttribute::TEX_COORD, nullptr, 2, ::draco::DT_FLOAT32, false, sizeof(uint8_t) * 8, 0);
                 mTexCoordAttributeId = mpMesh->AddAttribute(tex_coord_attrib, true, 0);
                 num_attribs++;
             }
@@ -316,7 +316,7 @@ public:
                 assert(nullptr != pTexCoordAttributes);
                 {
                     UpdateGeometryAttributeValues(pTexCoordAttributes,
-                                                  sizeof(uint8_t) * 8,
+                                                  sizeof(float) * 2,
                                                   verticesCount,
                                                   mpMesh->attribute(mTexCoordAttributeId));
                 }
