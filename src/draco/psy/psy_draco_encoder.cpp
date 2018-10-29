@@ -237,21 +237,6 @@ public:
         // reset encode buffer
         mpBuffer->Resize(0);
 
-        // encode header
-        {
-            mHeader.mMajorVersion = PSY_DRACO_API_MAJOR_VERSION;
-            mHeader.mMinorVersion = PSY_DRACO_API_MINOR_VERSION;
-            mHeader.mDecodeMultiplier = decodeMultiplier;
-            mHeader.mMeshType = meshType;
-            mHeader.mIFrameIndex = IFrameIndex;
-
-            if (!mpBuffer->Encode(&mHeader, sizeof(mHeader)))
-            {
-                mStatus = ::draco::Status(::draco::Status::Code::ERROR, "Failed to encode header.");
-                return eStatus::FAILED;
-            }
-        }
-
         // update faces if need
         if (false == is_incremental_compression)
         {
@@ -347,7 +332,6 @@ public:
     int mVisibilityAttributeId;
     int mTexCoordAttributeId;
 
-    Header mHeader;
     std::unique_ptr<::draco::Mesh> mpMesh;
     std::shared_ptr<::draco::EncoderBuffer> mpBuffer;
     std::unique_ptr<CompressionOptions> mpCompressionOptions;
