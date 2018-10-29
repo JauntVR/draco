@@ -238,7 +238,7 @@ public:
         mpBuffer->Resize(0);
 
         // encode header
-        {
+        /*{
             mHeader.mMajorVersion = PSY_DRACO_API_MAJOR_VERSION;
             mHeader.mMinorVersion = PSY_DRACO_API_MINOR_VERSION;
             mHeader.mDecodeMultiplier = decodeMultiplier;
@@ -250,7 +250,7 @@ public:
                 mStatus = ::draco::Status(::draco::Status::Code::ERROR, "Failed to encode header.");
                 return eStatus::FAILED;
             }
-        }
+        }*/
 
         // update faces if need
         if (false == is_incremental_compression)
