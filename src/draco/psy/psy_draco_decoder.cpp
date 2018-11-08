@@ -174,10 +174,10 @@ public:
 
     const ::draco::PointAttribute* GetPointAttributeByType(const ::draco::GeometryAttribute::Type type) const
     {
-        const int vis_att_id = mpMesh->GetNamedAttributeId(type);
-        if (vis_att_id >= 0)
+        const int attrib_id = mpMesh->GetNamedAttributeId(type);
+        if (attrib_id >= 0)
         {
-            return mpMesh->attribute(vis_att_id);
+            return mpMesh->attribute(attrib_id);
         }
         return nullptr;
     }
@@ -192,6 +192,11 @@ public:
         return GetPointAttributeByType(::draco::GeometryAttribute::COLOR);
     }
 
+    const ::draco::PointAttribute* GetTexCoordAttribute() const
+    {
+        return GetPointAttributeByType(::draco::GeometryAttribute::TEX_COORD);
+    }
+
     bool HasVisibilityInfo() const
     {
         return (nullptr != GetVisibilityAttribute());
@@ -202,11 +207,17 @@ public:
         return (nullptr != GetVertexColorAttribute());
     }
 
+    bool HasTexCoordInfo() const
+    {
+        return (nullptr != GetTexCoordAttribute());
+    }
+
     void GetMesh(int16_t* pVertices,
                  const size_t vertexStride,
                  unsigned int* pIndices,
                  unsigned char* pVisibilityAttributes,
-                 unsigned char* pVertexColorAttributes) const
+                 unsigned char* pVertexColorAttributes,
+                 unsigned char* pTexCoordAttributes) const
     {
         // update faces
         {
@@ -246,6 +257,16 @@ public:
                                           sizeof(uint8_t) * 3,
                                           mpMesh->num_points());
         }
+
+        // update tex coord attribute
+        if (nullptr != pTexCoordAttributes && HasTexCoordInfo())
+        {
+            UpdateGeometryAttributeValues(GetTexCoordAttribute(),
+                                          pTexCoordAttributes,
+                                          sizeof(float) * 2,
+                                          mpMesh->num_points());
+        }
+
     }
 
     Header mDecompressedHeader;
@@ -281,7 +302,8 @@ void MeshDecompression::GetMesh(int16_t* pVertices,
                                 const size_t vertexStride,
                                 unsigned int* pIndices,
                                 unsigned char* pVisibilityAttributes,
-                                unsigned char* pVertexColorAttributes) const
+                                unsigned char* pVertexColorAttributes,
+                                unsigned char* pTexCoordAttributes) const
 {
     if (mpImpl->mStatus.ok())
     {
@@ -289,7 +311,8 @@ void MeshDecompression::GetMesh(int16_t* pVertices,
                         vertexStride,
                         pIndices,
                         pVisibilityAttributes,
-                        pVertexColorAttributes);
+                        pVertexColorAttributes,
+                        pTexCoordAttributes);
     }
 }
 
@@ -334,6 +357,15 @@ bool MeshDecompression::HasVertexColorInfo() const
     if (mpImpl->mStatus.ok())
     {
         return mpImpl->HasVertexColorInfo();
+    }
+    return false;
+}
+
+bool MeshDecompression::hasTexCoordInfo() const
+{
+    if (mpImpl->mStatus.ok())
+    {
+        return mpImpl->HasTexCoordInfo();
     }
     return false;
 }

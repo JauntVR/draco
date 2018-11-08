@@ -117,10 +117,12 @@ class MeshCompression::Impl
 public:
     Impl(int compressionLevel,
          bool hasVisibilityInfo,
-         bool hasVertexColorInfo) :
+         bool hasVertexColorInfo,
+         bool hasTexCoordInfo) :
         mCompressionLevel(compressionLevel),
         mHasVisibilityInfo(hasVisibilityInfo),
         mHasVertexColorInfo(hasVertexColorInfo),
+        mHasTexCoordInfo(hasTexCoordInfo),
         mPositionAttributeId(0),
         mVertexColorAttributeId(-1),
         mVisibilityAttributeId(-1)
@@ -136,7 +138,7 @@ public:
 
             ::draco::GeometryAttribute pos_attrib;
             pos_attrib.Init(::draco::GeometryAttribute::POSITION,
-                            nullptr, 3, ::draco::DT_INT16, false, sizeof(int16_t) * 3, 0);
+                            nullptr, 3, ::draco::DT_FLOAT32, false, sizeof(float) * 3, 0);
             mPositionAttributeId = mpMesh->AddAttribute(pos_attrib, true, 0);
 
             if (mHasVisibilityInfo)
@@ -158,6 +160,14 @@ public:
                 num_attribs++;
             }
 
+            if (mHasTexCoordInfo)
+            {
+                ::draco::GeometryAttribute tex_coord_attrib;
+                tex_coord_attrib.Init(::draco::GeometryAttribute::TEX_COORD, nullptr, 2, ::draco::DT_FLOAT32, false, sizeof(uint8_t) * 8, 0);
+                mTexCoordAttributeId = mpMesh->AddAttribute(tex_coord_attrib, true, 0);
+                num_attribs++;
+            }
+
             // Convert compression level to speed (that 0 = slowest, 10 = fastest).
             const int speed = MAX_COMPRESSION_LEVEL - mCompressionLevel;
             mpCompressionOptions->SetGlobalInt("encoding_speed", speed);
@@ -174,7 +184,7 @@ public:
     }
 
     void ResetGeometryAttributeValues(const size_t verticesCount,
-                                       ::draco::PointAttribute* pPointAttribute)
+                                      ::draco::PointAttribute* pPointAttribute)
     {
         pPointAttribute->SetIdentityMapping();
         pPointAttribute->Resize(verticesCount);
@@ -208,7 +218,7 @@ public:
         }
     } // UpdateGeometryAttributeValues
 
-    MeshCompression::eStatus Run(const int16_t* pVertices,
+    MeshCompression::eStatus Run(const float* pVertices,
                                  const size_t vertexStride,
                                  const size_t verticesCount,
                                  const float decodeMultiplier,
@@ -216,6 +226,7 @@ public:
                                  const size_t indicesCount,
                                  const unsigned char* pVisibilityAttributes,
                                  const unsigned char* pVertexColorAttributes,
+                                 const unsigned char* pTexCoordAttributes,
                                  const MeshType meshType,
                                  uint32_t IFrameIndex)
     {
@@ -225,21 +236,6 @@ public:
 
         // reset encode buffer
         mpBuffer->Resize(0);
-
-        // encode header
-        {
-            mHeader.mMajorVersion = PSY_DRACO_API_MAJOR_VERSION;
-            mHeader.mMinorVersion = PSY_DRACO_API_MINOR_VERSION;
-            mHeader.mDecodeMultiplier = decodeMultiplier;
-            mHeader.mMeshType = meshType;
-            mHeader.mIFrameIndex = IFrameIndex;
-
-            if (!mpBuffer->Encode(&mHeader, sizeof(mHeader)))
-            {
-                mStatus = ::draco::Status(::draco::Status::Code::ERROR, "Failed to encode header.");
-                return eStatus::FAILED;
-            }
-        }
 
         // update faces if need
         if (false == is_incremental_compression)
@@ -298,6 +294,18 @@ public:
                                                  mpMesh->attribute(mVertexColorAttributeId));
                 }
             }
+
+            // update uv info
+            if (mTexCoordAttributeId >= 0)
+            {
+                assert(nullptr != pTexCoordAttributes);
+                {
+                    UpdateGeometryAttributeValues(pTexCoordAttributes,
+                                                  sizeof(float) * 2,
+                                                  verticesCount,
+                                                  mpMesh->attribute(mTexCoordAttributeId));
+                }
+            }
         }
 
         // run compression
@@ -317,12 +325,13 @@ public:
     int mCompressionLevel;
     bool mHasVisibilityInfo;
     bool mHasVertexColorInfo;
+    bool mHasTexCoordInfo;
 
     int mPositionAttributeId;
     int mVertexColorAttributeId;
     int mVisibilityAttributeId;
+    int mTexCoordAttributeId;
 
-    Header mHeader;
     std::unique_ptr<::draco::Mesh> mpMesh;
     std::shared_ptr<::draco::EncoderBuffer> mpBuffer;
     std::unique_ptr<CompressionOptions> mpCompressionOptions;
@@ -338,11 +347,13 @@ MeshCompression& MeshCompression::operator=(const MeshCompression&)
 
 MeshCompression::MeshCompression(int compressionLevel,
                                  bool hasVisibilityInfo,
-                                 bool hasVertexColorInfo)
+                                 bool hasVertexColorInfo,
+                                 bool hasTexCoordInfo)
 {
     mpImpl = new Impl(compressionLevel,
                       hasVisibilityInfo,
-                      hasVertexColorInfo);
+                      hasVertexColorInfo,
+                      hasTexCoordInfo);
 }
 
 MeshCompression::~MeshCompression()
@@ -364,7 +375,12 @@ bool MeshCompression::IsVertexColorInfoCompressing() const
     return mpImpl->mHasVertexColorInfo;
 }
 
-MeshCompression::eStatus MeshCompression::Run(const int16_t* pVertices,
+bool MeshCompression::IsTexCoordInfoCompressing() const
+{
+    return mpImpl->mHasTexCoordInfo;
+}
+
+MeshCompression::eStatus MeshCompression::Run(const float* pVertices,
         const size_t vertexStride,
         const size_t verticesCount,
         const float decodeMultiplier,
@@ -372,6 +388,7 @@ MeshCompression::eStatus MeshCompression::Run(const int16_t* pVertices,
         const size_t indicesCount,
         const unsigned char* pVisibilityAttributes,
         const unsigned char* pVertexColorAttributes,
+        const unsigned char* pTexCoordAttributes,
         const MeshType meshType,
         uint32_t IFrameIndex)
 {
@@ -383,6 +400,7 @@ MeshCompression::eStatus MeshCompression::Run(const int16_t* pVertices,
                        indicesCount,
                        pVisibilityAttributes,
                        pVertexColorAttributes,
+                       pTexCoordAttributes,
                        meshType,
                        IFrameIndex);
 }
