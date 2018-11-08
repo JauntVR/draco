@@ -138,7 +138,7 @@ public:
 
             ::draco::GeometryAttribute pos_attrib;
             pos_attrib.Init(::draco::GeometryAttribute::POSITION,
-                            nullptr, 3, ::draco::DT_INT16, false, sizeof(int16_t) * 3, 0);
+                            nullptr, 3, ::draco::DT_FLOAT32, false, sizeof(float) * 3, 0);
             mPositionAttributeId = mpMesh->AddAttribute(pos_attrib, true, 0);
 
             if (mHasVisibilityInfo)
@@ -218,7 +218,7 @@ public:
         }
     } // UpdateGeometryAttributeValues
 
-    MeshCompression::eStatus Run(const int16_t* pVertices,
+    MeshCompression::eStatus Run(const float* pVertices,
                                  const size_t vertexStride,
                                  const size_t verticesCount,
                                  const float decodeMultiplier,
@@ -380,7 +380,7 @@ bool MeshCompression::IsTexCoordInfoCompressing() const
     return mpImpl->mHasTexCoordInfo;
 }
 
-MeshCompression::eStatus MeshCompression::Run(const int16_t* pVertices,
+MeshCompression::eStatus MeshCompression::Run(const float* pVertices,
         const size_t vertexStride,
         const size_t verticesCount,
         const float decodeMultiplier,

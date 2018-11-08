@@ -51,7 +51,7 @@ public:
 
     bool IsTexCoordInfoCompressing() const;
 
-    eStatus Run(const int16_t* pQuantizedVertices,
+    eStatus Run(const float* pQuantizedVertices,
                 const size_t vertexStride,
                 const size_t verticesCount,
                 const float decodeMultiplier,
