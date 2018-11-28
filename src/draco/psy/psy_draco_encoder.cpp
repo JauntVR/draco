@@ -125,7 +125,8 @@ public:
         mHasTexCoordInfo(hasTexCoordInfo),
         mPositionAttributeId(0),
         mVertexColorAttributeId(-1),
-        mVisibilityAttributeId(-1)
+        mVisibilityAttributeId(-1),
+        mTexCoordAttributeId(-1)
     {
         mCompressionLevel = std::max(0, std::min(MAX_COMPRESSION_LEVEL, mCompressionLevel));
 
