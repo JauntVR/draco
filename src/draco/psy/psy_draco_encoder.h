@@ -40,6 +40,7 @@ public:
     *     1 for visible and 0 for invisible
     */
     MeshCompression(int compressionLevel,
+                    int texCoordQuantizationBitsCount = 0,
                     bool hasVisibilityInfo = false,
                     bool hasVerttexColorInfo = false,
                     bool hasTexCoordInfo = false);

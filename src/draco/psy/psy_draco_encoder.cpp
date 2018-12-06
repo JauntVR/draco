@@ -116,6 +116,7 @@ class MeshCompression::Impl
 {
 public:
     Impl(int compressionLevel,
+         int texCoordQuantizationBitsCount,
          bool hasVisibilityInfo,
          bool hasVertexColorInfo,
          bool hasTexCoordInfo) :
@@ -164,9 +165,16 @@ public:
             if (mHasTexCoordInfo)
             {
                 ::draco::GeometryAttribute tex_coord_attrib;
-                tex_coord_attrib.Init(::draco::GeometryAttribute::TEX_COORD, nullptr, 2, ::draco::DT_FLOAT32, false, sizeof(uint8_t) * 8, 0);
+                tex_coord_attrib.Init(::draco::GeometryAttribute::TEX_COORD,
+                                      nullptr, 2, ::draco::DT_FLOAT32, false, sizeof(float) * 2, 0);
                 mTexCoordAttributeId = mpMesh->AddAttribute(tex_coord_attrib, true, 0);
                 num_attribs++;
+
+                if (texCoordQuantizationBitsCount > 0)
+                {
+                    int quantization_bits = std::min(texCoordQuantizationBitsCount, static_cast<int>(sizeof(float) * 8));
+                    mpCompressionOptions->SetAttributeInt(::draco::GeometryAttribute::TEX_COORD, "quantization_bits", quantization_bits);
+                }
             }
 
             // Convert compression level to speed (that 0 = slowest, 10 = fastest).
@@ -314,12 +322,17 @@ public:
             // update uv info
             if (mTexCoordAttributeId >= 0)
             {
-                assert(nullptr != pTexCoordAttributes);
+                if (pTexCoordAttributes)
                 {
                     UpdateGeometryAttributeValues(pTexCoordAttributes,
                                                   sizeof(float) * 2,
                                                   verticesCount,
                                                   mpMesh->attribute(mTexCoordAttributeId));
+                }
+                else
+                {
+                    ResetGeometryAttributeValues(verticesCount,
+                                                 mpMesh->attribute(mTexCoordAttributeId));
                 }
             }
         }
@@ -363,11 +376,13 @@ MeshCompression& MeshCompression::operator=(const MeshCompression&)
 }
 
 MeshCompression::MeshCompression(int compressionLevel,
+                                 int texCoordQuantizationBitsCount,
                                  bool hasVisibilityInfo,
                                  bool hasVertexColorInfo,
                                  bool hasTexCoordInfo)
 {
     mpImpl = new Impl(compressionLevel,
+                      texCoordQuantizationBitsCount,
                       hasVisibilityInfo,
                       hasVertexColorInfo,
                       hasTexCoordInfo);
