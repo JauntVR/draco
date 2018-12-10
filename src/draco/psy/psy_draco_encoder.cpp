@@ -116,6 +116,8 @@ class MeshCompression::Impl
 {
 public:
     Impl(int compressionLevel,
+         int vertexPositionQuantizationBitsCount,
+         int texCoordQuantizationBitsCount,
          bool hasVisibilityInfo,
          bool hasVertexColorInfo,
          bool hasTexCoordInfo) :
@@ -140,6 +142,12 @@ public:
             pos_attrib.Init(::draco::GeometryAttribute::POSITION,
                             nullptr, 3, ::draco::DT_FLOAT32, false, sizeof(float) * 3, 0);
             mPositionAttributeId = mpMesh->AddAttribute(pos_attrib, true, 0);
+
+            if (vertexPositionQuantizationBitsCount > 0)
+            {
+                int quantization_bits = std::min(vertexPositionQuantizationBitsCount, static_cast<int>(sizeof(float) * 8));
+                mpCompressionOptions->SetAttributeInt(::draco::GeometryAttribute::POSITION, "quantization_bits", quantization_bits);
+            }
 
             if (mHasVisibilityInfo)
             {
@@ -166,6 +174,12 @@ public:
                 tex_coord_attrib.Init(::draco::GeometryAttribute::TEX_COORD, nullptr, 2, ::draco::DT_FLOAT32, false, sizeof(uint8_t) * 8, 0);
                 mTexCoordAttributeId = mpMesh->AddAttribute(tex_coord_attrib, true, 0);
                 num_attribs++;
+
+                if (texCoordQuantizationBitsCount > 0)
+                {
+                    int quantization_bits = std::min(texCoordQuantizationBitsCount, static_cast<int>(sizeof(float) * 8));
+                    mpCompressionOptions->SetAttributeInt(::draco::GeometryAttribute::TEX_COORD, "quantization_bits", quantization_bits);
+                }
             }
 
             // Convert compression level to speed (that 0 = slowest, 10 = fastest).
@@ -346,11 +360,15 @@ MeshCompression& MeshCompression::operator=(const MeshCompression&)
 }
 
 MeshCompression::MeshCompression(int compressionLevel,
+                                 int vertexPositionQuantizationBitsCount,
+                                 int texCoordQuantizationBitsCount,
                                  bool hasVisibilityInfo,
                                  bool hasVertexColorInfo,
                                  bool hasTexCoordInfo)
 {
     mpImpl = new Impl(compressionLevel,
+                      vertexPositionQuantizationBitsCount,
+                      texCoordQuantizationBitsCount,
                       hasVisibilityInfo,
                       hasVertexColorInfo,
                       hasTexCoordInfo);
