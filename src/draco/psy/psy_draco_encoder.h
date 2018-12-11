@@ -34,12 +34,17 @@ public:
     * - vertexPositionQuantizationBitsCount (quantization parameter)
     *   + 0: not perform any quantization
     *   + ?: quantize the input values to that specified number of bits
+    * - texCoordQuantizationBitsCount (quantization parameter)
+    *   + 0: not perform any quantization
+    *   + ?: quantize the input values to that specified number of bits
     * - hasVisibilityInfo (compress visibility info of view ports per camers
     *   + determine existing visibility info to compress or not
     *   + supporting maximum 8 view ports, have been presented by corresponding bits
     *     1 for visible and 0 for invisible
     */
     MeshCompression(int compressionLevel,
+                    int vertexPositionQuantizationBitsCount = 0,
+                    int texCoordQuantizationBitsCount = 0,
                     bool hasVisibilityInfo = false,
                     bool hasVerttexColorInfo = false,
                     bool hasTexCoordInfo = false);
