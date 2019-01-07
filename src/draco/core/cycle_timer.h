@@ -25,22 +25,28 @@ typedef LARGE_INTEGER timeval;
 #include <sys/time.h>
 #endif
 
-#include <cinttypes>
+#ifdef _WIN32
+#include <inttypes.h>
+#elif
+#include <cinttypes.h>
+#endif
 #include <cstddef>
 
-namespace draco {
+namespace draco
+{
 
-class DracoTimer {
- public:
-  DracoTimer() {}
-  ~DracoTimer() {}
-  void Start();
-  void Stop();
-  int64_t GetInMs();
+class DracoTimer
+{
+public:
+    DracoTimer() {}
+    ~DracoTimer() {}
+    void Start();
+    void Stop();
+    int64_t GetInMs();
 
- private:
-  timeval tv_start;
-  timeval tv_end;
+private:
+    timeval tv_start;
+    timeval tv_end;
 };
 
 typedef DracoTimer CycleTimer;
