@@ -31,37 +31,22 @@ typedef draco::EncodedGeometryType draco_EncodedGeometryType;
 typedef draco::Status draco_Status;
 typedef draco::Status::Code draco_StatusCode;
 
-// To generate Draco JabvaScript bindings you must have emscripten installed.
+// To generate Draco JavaScript bindings you must have emscripten installed.
 // Then run make -f Makefile.emcc jslib.
 
-class MetadataQuerier {
+class DracoDoubleArray {
  public:
-  MetadataQuerier();
+  DracoDoubleArray();
+  double GetValue(int index) const;
 
-  bool HasEntry(const draco::Metadata &metadata, const char *entry_name) const;
+  bool SetValues(const double *values, int count);
 
-  // This function does not guarantee that entry's type is long.
-  long GetIntEntry(const draco::Metadata &metadata,
-                   const char *entry_name) const;
+  void SetValue(int index, float val) { values_[index] = val; }
 
-  // This function does not guarantee that entry's type is double.
-  double GetDoubleEntry(const draco::Metadata &metadata,
-                        const char *entry_name) const;
-
-  // This function does not guarantee that entry's type is char*.
-  const char *GetStringEntry(const draco::Metadata &metadata,
-                             const char *entry_name);
-
-  long NumEntries(const draco::Metadata &metadata) const;
-  const char *GetEntryName(const draco::Metadata &metadata, int entry_id);
+  int size() const { return values_.size(); }
 
  private:
-  // Cached values for metadata entries.
-  std::vector<std::string> entry_names_;
-  const draco::Metadata *entry_names_metadata_;
-
-  // Cached value for GetStringEntry() to avoid scoping issues.
-  std::string last_string_returned_;
+  std::vector<double> values_;
 };
 
 class DracoFloat32Array {
@@ -164,6 +149,40 @@ class DracoUInt32Array {
 
  private:
   std::vector<uint32_t> values_;
+};
+
+class MetadataQuerier {
+ public:
+  MetadataQuerier();
+
+  bool HasEntry(const draco::Metadata &metadata, const char *entry_name) const;
+
+  // This function does not guarantee that entry's type is long.
+  long GetIntEntry(const draco::Metadata &metadata,
+                   const char *entry_name) const;
+
+  // This function does not guarantee that entry's type is double.
+  double GetDoubleEntry(const draco::Metadata &metadata,
+                        const char *entry_name) const;
+
+  // This function does not guarantee that entry's type is char*.
+  const char *GetStringEntry(const draco::Metadata &metadata,
+                             const char *entry_name);
+
+  void GetDoubleArrayEntry(const draco::Metadata &metadata,
+                           const char *entry_name,
+                           DracoDoubleArray *out_values) const;
+
+  long NumEntries(const draco::Metadata &metadata) const;
+  const char *GetEntryName(const draco::Metadata &metadata, int entry_id);
+
+ private:
+  // Cached values for metadata entries.
+  std::vector<std::string> entry_names_;
+  const draco::Metadata *entry_names_metadata_;
+
+  // Cached value for GetStringEntry() to avoid scoping issues.
+  std::string last_string_returned_;
 };
 
 // Class used by emscripten WebIDL Binder [1] to wrap calls to decode Draco
@@ -279,6 +298,9 @@ class Decoder {
   const draco::Metadata *GetMetadata(const draco::PointCloud &pc) const;
   const draco::Metadata *GetAttributeMetadata(const draco::PointCloud &pc,
                                               long att_id) const;
+  const draco::Metadata *GetAttributeMetadataByStringEntry(
+      const draco::PointCloud &pc, const std::string &name,
+      const std::string &value) const;
 
  private:
   template <class DracoArrayT, class ValueTypeT>

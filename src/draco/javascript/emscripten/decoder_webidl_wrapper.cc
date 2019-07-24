@@ -58,6 +58,15 @@ const char *MetadataQuerier::GetStringEntry(const Metadata &metadata,
   return value;
 }
 
+void MetadataQuerier::GetDoubleArrayEntry(const Metadata &metadata,
+                                          const char *entry_name,
+                                          DracoDoubleArray *out_values) const {
+  const std::string name(entry_name);
+  std::vector<double> values;
+  metadata.GetEntryDoubleArray(name, &values);
+  out_values->SetValues(values.data(), values.size());
+}
+
 long MetadataQuerier::NumEntries(const Metadata &metadata) const {
   return metadata.num_entries();
 }
@@ -75,6 +84,19 @@ const char *MetadataQuerier::GetEntryName(const Metadata &metadata,
   if (entry_id < 0 || entry_id >= entry_names_.size())
     return nullptr;
   return entry_names_[entry_id].c_str();
+}
+
+DracoDoubleArray::DracoDoubleArray() {}
+
+double DracoDoubleArray::GetValue(int index) const { return values_[index]; }
+
+bool DracoDoubleArray::SetValues(const double *values, int count) {
+  if (values) {
+    values_.assign(values, values + count);
+  } else {
+    values_.resize(count);
+  }
+  return true;
 }
 
 DracoFloat32Array::DracoFloat32Array() {}
@@ -307,4 +329,10 @@ const Metadata *Decoder::GetMetadata(const PointCloud &pc) const {
 const Metadata *Decoder::GetAttributeMetadata(const PointCloud &pc,
                                               long att_id) const {
   return pc.GetAttributeMetadataByAttributeId(att_id);
+}
+
+const Metadata *Decoder::GetAttributeMetadataByStringEntry(
+    const draco::PointCloud &pc, const std::string &name,
+    const std::string &value) const {
+  return pc.GetAttributeMetadataByStringEntry(name, value);
 }

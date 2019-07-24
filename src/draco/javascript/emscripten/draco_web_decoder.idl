@@ -97,7 +97,7 @@ interface Metadata {
 
 enum draco_StatusCode {
   "draco_Status::OK",
-  "draco_Status::ERROR",
+  "draco_Status::DRACO_ERROR",
   "draco_Status::IO_ERROR",
   "draco_Status::INVALID_PARAMETER",
   "draco_Status::UNSUPPORTED_VERSION",
@@ -120,6 +120,9 @@ interface MetadataQuerier {
                    [Const] DOMString entry_name);
   double GetDoubleEntry([Ref, Const] Metadata metadata,
                         [Const] DOMString entry_name);
+  void GetDoubleArrayEntry([Ref, Const] Metadata metadata,
+                                       [Const] DOMString entry_name,
+                                       DracoDoubleArray out_values);
   [Const] DOMString GetStringEntry([Ref, Const] Metadata metadata,
                                    [Const] DOMString entry_name);
 
@@ -129,6 +132,12 @@ interface MetadataQuerier {
 
 // Draco version of typed arrays. The memory of these arrays is allocated on the
 // emscripten heap.
+interface DracoDoubleArray {
+  void DracoDoubleArray();
+  double GetValue(long index);
+  long size();
+};
+
 interface DracoFloat32Array {
   void DracoFloat32Array();
   float GetValue(long index);
@@ -193,6 +202,9 @@ interface Decoder {
   [Const] Metadata GetMetadata([Ref, Const] PointCloud pc);
   [Const] Metadata GetAttributeMetadata([Ref, Const] PointCloud pc,
                                         long att_id);
+  [Const] Metadata GetAttributeMetadataByStringEntry(
+    [Ref, Const] PointCloud pc, [Const] DOMString name,
+    [Const] DOMString value);
 
   boolean GetFaceFromMesh([Ref, Const] Mesh m, long face_id,
                           DracoInt32Array out_values);
