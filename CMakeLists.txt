@@ -767,12 +767,13 @@ if (EMSCRIPTEN)
                   "${draco_src_root}/javascript/emscripten/finalize.js")
 elseif(PSY_DRACO_COMPRESSION_ONLY)
   if (MSVC)
-      # because draco 3d has not yet supported for visual studio 2013
-      # we need to create a simple wrapper and compile it on visual studio 2015
-      # - if we compile it onto a static lib, we will get linking error due to mismatch between two visual studio versions
-      # - so, we're compiling the project as shared lib here
+      set(mode STATIC)
+      if (PSY_DRACO_SHARED)
+          set(mode SHARED)
+          add_definitions(-DPSY_DRACO_SHARED_LIB=1)
+      endif ()
       add_definitions(-DPSY_DRACO_EXPORT=1 -D_SCL_SECURE_NO_WARNINGS)
-      add_library(psy_draco_compression SHARED ${psy_draco_compression_sources})
+      add_library(psy_draco_compression ${mode} ${psy_draco_compression_sources})
       set_target_properties(psy_draco_compression PROPERTIES SOVERSION 1)
   else()
       # for consitency supporting on windows, we're also creating a wrapper for other platform
