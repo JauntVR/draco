@@ -11,7 +11,7 @@
 #define PSY_DRACO_COMMON_H
 
 #if defined (WIN32)
-#    ifdef PSY_DRACO_STATIC_LIB
+#    ifndef PSY_DRACO_SHARED_LIB
 #        define PSY_DRACO_API
 #    else
 #        ifdef PSY_DRACO_EXPORT
